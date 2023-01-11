@@ -9,13 +9,13 @@ fn main() {
     let json_file_path = Path::new("opcodes.json");
     let display = json_file_path.display();
 
-    let mut file = match File::open(json_file_path) {
+    let mut json_file = match File::open(json_file_path) {
         Err(why) => panic!("couldn't open {}: {}", display, why),
         Ok(file) => file,
     };
 
     let mut json_string = String::new();
-    match file.read_to_string(&mut json_string) {
+    match json_file.read_to_string(&mut json_string) {
         Err(why) => panic!("couldn't read {}: {}", display, why),
         Ok(_) => (),
     }
@@ -35,8 +35,17 @@ fn main() {
         Err(e) => panic!("Parsing error(s): {}", e),
     };
 
-    match tera.render("desassembler.rs", &context) {
-        Ok(s) => print!("{}", s),
+    let template_name = "desassembler.rs";
+    
+    let render_file_path = Path::new("render");
+    let path = render_file_path.join(template_name);
+    let render_file = match File::create(path) {
+        Err(why) => panic!("couldn't open {}: {}", display, why),
+        Ok(file) => file,
+    };
+
+    match tera.render_to(template_name, &context, &render_file) {
+        Ok(_) => println!("render successful"),
         Err(e) => panic!("error: {}", e),
     }
 }

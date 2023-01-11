@@ -5,18 +5,25 @@
         ,
     {%- endif -%}
     {% raw %} {%endraw%}
+    {%- if not o.immediate -%}
+    (
+    {%- endif -%}
+
     {%- if o.name == "d8" -%}
         {:#02x}
     {%- elif o.name == "d16" -%}
         {:#04x}
     {%- elif o.name == "a8" -%}
-        *{:#02x}
+        {:#02x}
     {%- elif o.name == "a16" -%}
-        *{:#04x}
+        {:#04x}
     {%- elif o.name == "r8" -%}
         {}
     {%- else -%}
         {{o.name}}
+    {%- endif -%}
+    {%- if not o.immediate -%}
+    )
     {%- endif -%}
 {%- endfor -%}
 {%- endmacro opcodeString -%}

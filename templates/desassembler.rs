@@ -8,7 +8,7 @@ pub fn disassemble(mem: &[u8]) {
             print!("{:02x} ", mem[i]);
             if i >= mem.len() {
                 println!("truncated instruction");
-                break;
+                return;
             }
         }
         match mem[pos] {
