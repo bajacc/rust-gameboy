@@ -44,3 +44,11 @@
     {%- endif -%}
 {%- endfor -%}
 {%- endmacro opcodeParameter -%}
+
+{%- macro register(r) -%}
+{%- if r == "HL" -%}
+v
+{%- else -%}
+cpu.{{r | lower}}
+{%- endif -%}
+{%- endmacro register -%}

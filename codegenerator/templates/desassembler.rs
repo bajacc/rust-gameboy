@@ -1,5 +1,9 @@
 {% import "macros.rs" as macros %}
 
+mod opcodes_const;
+
+use opcodes_const::OPCODE_BYTES_LEN;
+
 pub fn disassemble(mem: &[u8], number: usize) {
     let pos = 0;
     for _ in 0..number {
@@ -17,14 +21,6 @@ pub fn disassemble(mem: &[u8], number: usize) {
         pos += len;
     }
 }
-
-const OPCODE_BYTES_LEN: [usize; 256] = [
-{% for hex, i in unprefixed -%}
-    {%- if hex != "0xCB" -%} {{i.bytes}},
-    {%- else -%} 2,
-    {%- endif -%}
-{% endfor %}
-];
 
 fn disassemble_unprefixed(mem: &[u8], pos: usize){
     match mem[pos] {

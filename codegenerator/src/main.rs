@@ -35,17 +35,19 @@ fn main() {
         Err(e) => panic!("Parsing error(s): {}", e),
     };
 
-    let template_name = "desassembler.rs";
-    
-    let render_file_path = Path::new("rust-gameboy/src");
-    let path = render_file_path.join(template_name);
-    let render_file = match File::create(path) {
-        Err(why) => panic!("couldn't open {}: {}", display, why),
-        Ok(file) => file,
-    };
+    let template_names = ["desassembler.rs", "opcodes_const.rs", "opcodes.rs"];
 
-    match tera.render_to(template_name, &context, &render_file) {
-        Ok(_) => println!("render successful"),
-        Err(e) => panic!("error: {}", e),
+    for template_name in template_names {
+        let render_file_path = Path::new("rust-gameboy/src");
+        let path = render_file_path.join(template_name);
+        let render_file = match File::create(path) {
+            Err(why) => panic!("couldn't open {}: {}", display, why),
+            Ok(file) => file,
+        };
+
+        match tera.render_to(template_name, &context, &render_file) {
+            Ok(_) => println!("render successful: {}", template_name),
+            Err(e) => panic!("error: {}", e),
+        }
     }
 }
