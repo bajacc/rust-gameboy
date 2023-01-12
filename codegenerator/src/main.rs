@@ -6,7 +6,7 @@ use std::path::Path;
 use tera::Tera;
 
 fn main() {
-    let json_file_path = Path::new("opcodes.json");
+    let json_file_path = Path::new("codegenerator/opcodes.json");
     let display = json_file_path.display();
 
     let mut json_file = match File::open(json_file_path) {
@@ -30,14 +30,14 @@ fn main() {
         Ok(context) => context,
     };
 
-    let tera = match Tera::new("templates/**/*") {
+    let tera = match Tera::new("codegenerator/templates/**/*") {
         Ok(t) => t,
         Err(e) => panic!("Parsing error(s): {}", e),
     };
 
     let template_name = "desassembler.rs";
     
-    let render_file_path = Path::new("render");
+    let render_file_path = Path::new("rust-gameboy/src");
     let path = render_file_path.join(template_name);
     let render_file = match File::create(path) {
         Err(why) => panic!("couldn't open {}: {}", display, why),

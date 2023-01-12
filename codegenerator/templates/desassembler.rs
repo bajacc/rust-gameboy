@@ -1,15 +1,14 @@
 {% import "macros.rs" as macros %}
 
-pub fn disassemble(mem: &[u8]) {
-    let mut pos = 0;
-    while pos < mem.len() {
+pub fn disassemble(mem: &[u8], number: usize) {
+    let pos = 0;
+    for _ in 0..number {
         let len = OPCODE_BYTES_LEN[mem[pos] as usize];
+        if pos + len > mem.len() {
+            return;
+        }
         for i in pos..pos+len {
             print!("{:02x} ", mem[i]);
-            if i >= mem.len() {
-                println!("truncated instruction");
-                return;
-            }
         }
         match mem[pos] {
             0xCB => disassemble_prefixed(mem, pos + 1),
