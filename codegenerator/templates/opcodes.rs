@@ -3,91 +3,116 @@
 use crate::cpu::Cpu;
 use crate::mmu::Mmu;
 
+{% for r16 in ["bc", "de", "hl"] %}
+{%- set arr = r16 | split(pat="") -%}
+pub fn read_{{r16}}(cpu: &mut Cpu) -> u16 {
+    return (cpu.{{arr[2]}} as u16) | ((cpu.{{arr[1]}} as u16) << 8);
+}
+
+pub fn write_{{r16}}(cpu: &mut Cpu, v: u16) {
+    cpu.{{arr[1]}} = (v >> 8) as u8;
+    cpu.{{arr[2]}} = (v & 0xff) as u8;
+}
+{% endfor %}
+
+
 {% for hex, i in cbprefixed %}
 #[allow(unused_variables)]
 pub fn execute_prefixed{{hex | lower}}(cpu: &mut Cpu, mmu: &mut Mmu) {
 
-    {% set operator = i.operands | last %}
+    {% set operand = i.operands | last %}
 
-    {% if operator.name == "HL" %}
-    let hl: u16 = (cpu.l as u16) | ((cpu.h as u16) << 8);
-    let mut v: u8 = mmu.read(hl);
-    {% endif %}
+    let mut v = {{macros::load(operand=operand)}};
 
-    {% set r = macros::register(r = operator.name) %}
+    {%- if i.mnemonic == "RLC" -%}
+    let c = v >> 7;
+    v = (v << 1) | c;
 
-    {% if i.mnemonic == "RLC" %}
-    let c = {{r}} >> 7;
-    {{r}} = ({{r}} << 1) | c;
-    let z = {{r}} == 0;
+    {%- elif i.mnemonic == "RL" -%}
+    let c = v >> 7;
+    v = (v << 1) | ((cpu.f >> 4) & 1);
 
-    {% elif i.mnemonic == "RL" %}
-    let c = {{r}} >> 7;
-    {{r}} = ({{r}} << 1) | ((cpu.f >> 4) & 1);
-    let z = {{r}} == 0;
+    {%- elif i.mnemonic == "RRC" -%}
+    let c = v & 1;
+    v = (v >> 1) | (c << 7);
 
-    {% elif i.mnemonic == "RRC" %}
-    let c = {{r}} & 1;
-    {{r}} = ({{r}} >> 1) | (c << 7);
-    let z = {{r}} == 0;
+    {%- elif i.mnemonic == "RR" -%}
+    let c = v & 1;
+    v = (v >> 1) | ((cpu.f << 3) & 0x80);
 
-    {% elif i.mnemonic == "RR" %}
-    let c = {{r}} & 1;
-    {{r}} = ({{r}} >> 1) | ((cpu.f << 3) & 0x80);
-    let z = {{r}} == 0;
+    {%- elif i.mnemonic == "SLA" -%}
+    let c = v >> 7;
+    v <<= 1;
 
-    {% elif i.mnemonic == "SLA" %}
-    let c = {{r}} >> 7;
-    {{r}} <<= 1;
-    let z = {{r}} == 0;
+    {%- elif i.mnemonic == "SRA" -%}
+    let c = v & 1;
+    v = (v >> 1) | (v & 0x80);
 
-    {% elif i.mnemonic == "SRA" %}
-    let c = {{r}} & 1;
-    {{r}} = ({{r}} >> 1) | ({{r}} & 0x80);
-    let z = {{r}} == 0;
+    {%- elif i.mnemonic == "SRL" -%}
+    let c = v & 1;
+    v >>= 1;
 
-    {% elif i.mnemonic == "SRL" %}
-    let c = {{r}} & 1;
-    {{r}} >>= 1;
-    let z = {{r}} == 0;
+    {%- elif i.mnemonic == "SET" -%}
+    v |= 1 << {{i.operands[0].name}};
 
-    {% elif i.mnemonic == "BIT" %}
-    let z = ({{r}} & (1 << {{i.operands[0].name}})) == 0;
+    {%- elif i.mnemonic == "RES" -%}
+    v &= !(1 << {{i.operands[0].name}});
 
-    {% elif i.mnemonic == "SET" %}
-    {{r}} |= 1 << {{i.operands[0].name}};
+    {%- elif i.mnemonic == "SWAP" -%}
+    v = (v >> 4) | (v << 4);
 
-    {% elif i.mnemonic == "RES" %}
-    {{r}} &= !(1 << {{i.operands[0].name}});
+    {%- endif -%}
 
-    {% elif i.mnemonic == "SWAP" %}
-    {{r}} &= ({{r}} >> 4) | ({{r}} << 4);
-    let z = {{r}} == 0;
+    {{macros::write(operand=operand, value="v")}}
 
-    {% endif %}
+    {%- if i.mnemonic == "BIT" -%}
+    let z = (v & (1 << {{i.operands[0].name}})) == 0;
+    {%- elif i.flags["Z"] == "Z" -%}
+    let z = v == 0;
+    {%- endif -%}
 
-    {% if operator.name == "HL" %}
-    mmu.write(hl, v);
-    {% endif %}
-
-    {# create new flag register #}
-    {% if i.flags["Z"] != "-" or i.flags["N"] != "-" or i.flags["H"] != "-" or i.flags["C"] != "-" %}
-    let mut f = 0;
-
-    {%- for flag, value in i.flags %}
-        f <<= 1;
-        {%- if value == "C" %}
-        f |= c;
-        {%- elif value == "Z" %}
-        f |= z as u8;
-        {%- elif value == "-" %}
-        f |= (cpu.f >> {{7 - loop.index0}}) & 1;
-        {%- elif value == "1" %}
-        f |= 1;
-        {%- endif %}
-    {%- endfor %}
-    cpu.f = f << 4;
-
-    {% endif %}
+    {# update flag register #}
+    {{macros::updateFlag(flags=i.flags)}}
 }
 {%- endfor -%}
+
+{% for hex, i in unprefixed %}
+#[allow(unused_variables)]
+pub fn execute_unprefixed{{hex | lower}}(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
+    {%- if i.mnemonic == "LD" -%}
+        {%- set opleft = i.operands[0] -%}
+        {%- set opright = i.operands[1] -%}
+        {%- set value = macros::load(operand=opright) -%}
+        {%- if opright.addnext -%}
+            {%- set value = value ~ "+ (arg as u8 as i8 as i16 as u16)" -%}
+        {%- endif -%}
+        {{macros::write(operand=opleft, value=value)}}
+    {% else %}
+    panic!("not implemented");
+    {% endif %}
+
+    {% if i.flags["Z"] == "Z" %}
+    let z = 0; // todo
+    {% endif %}
+
+    {# update flag register #}
+    {#{{macros::updateFlag(flags=i.flags)}}#}
+}
+{% endfor %}
+
+pub fn execute_prefixed(cpu: &mut Cpu, mmu: &mut Mmu, opcode: u8) {
+    match opcode {
+        {% for hex, i in cbprefixed -%}
+            {{hex}} => execute_prefixed{{hex | lower}}(cpu, mmu),
+        {% endfor -%}
+    }
+}
+
+pub fn execute_unprefixed(cpu: &mut Cpu, mmu: &mut Mmu, opcode: u8, arg: u16) {
+    match opcode {
+        {% for hex, i in unprefixed -%}
+            {{hex}} => execute_unprefixed{{hex | lower}}(cpu, mmu, arg),
+        {% endfor -%}
+    }
+}
+

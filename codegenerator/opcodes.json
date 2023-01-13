@@ -174,7 +174,8 @@
 				{
 					"name": "a16",
 					"bytes": 2,
-					"immediate": false
+					"immediate": false,
+					"doublewrite": true
 				},
 				{
 					"name": "SP",
@@ -736,7 +737,7 @@
 			"operands": [
 				{
 					"name": "HL",
-					"increment": true,
+					"add": "+1",
 					"immediate": false
 				},
 				{
@@ -915,7 +916,7 @@
 				},
 				{
 					"name": "HL",
-					"increment": true,
+					"add": "+1",
 					"immediate": false
 				}
 			],
@@ -1087,7 +1088,7 @@
 			"operands": [
 				{
 					"name": "HL",
-					"decrement": true,
+					"add": "-1",
 					"immediate": false
 				},
 				{
@@ -1266,7 +1267,7 @@
 				},
 				{
 					"name": "HL",
-					"decrement": true,
+					"add": "-1",
 					"immediate": false
 				}
 			],
@@ -5432,7 +5433,7 @@
 				},
 				{
 					"name": "SP",
-					"increment": true,
+					"addnext": true,
 					"immediate": true
 				},
 				{
