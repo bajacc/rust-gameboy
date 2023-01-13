@@ -49,24 +49,24 @@
     {%- set r = operand.name -%}
     {%- if r in ["HL", "BC", "DE"] -%}
         {%- if operand.immediate -%}
-            read_{{r | lower}}(cpu);
+            read_{{r | lower}}(cpu)
         {%- else -%}
-            mmu.read(read_{{r | lower}}(cpu));
-            {%- if operand.add -%}
-            let v = read_{{r | lower}}(cpu);
-            write_{{r | lower}}(cpu, v {{operand.add}});
-            {%- endif-%}
+            mmu.read(read_{{r | lower}}(cpu))
         {%- endif -%}
     {%- elif r == "a8" -%}
     mmu.read(arg + 0xff00);
     {%- elif r == "a16" -%}
-    mmu.read(arg);
+        {%- if operand.immediate -%}
+            arg
+        {%- else -%}
+            mmu.read(arg)
+        {%- endif -%}
     {%- elif r == "d8" -%}
     arg as u8
     {%- elif r == "d16" -%}
     arg
     {%- elif r == "r8" -%}
-    arg as u8 as i8
+    arg as u8 as i8 as i16 as u16
     {%- elif r in ["A","B","C","D","E","H","L","SP","PC"] -%}
     cpu.{{r | lower}}
     {%- else -%}
@@ -81,10 +81,6 @@
         write_{{r | lower}}(cpu, {{value}});
         {%- else -%}
         mmu.write(read_{{r | lower}}(cpu), {{value}});
-        {%- if operand.add -%}
-        let v = read_{{r | lower}}(cpu);
-        write_{{r | lower}}(cpu, v {{operand.add}});
-        {%- endif-%}
         {%- endif -%}
     
     {%- elif r == "a8" -%}
@@ -129,3 +125,16 @@
 
 {% endif %}
 {%- endmacro updateFlag -%}
+
+{%- macro jmpcond(operand) -%}
+{% if operand.name == "NZ" %}
+!flag_z(cpu)
+{% elif operand.name == "Z" %}
+flag_z(cpu)
+{% elif operand.name == "NC" %}
+!flag_c(cpu)
+{% elif operand.name == "C" %}
+flag_c(cpu)
+{% endif %}
+{%- endmacro jmpcond -%}
+

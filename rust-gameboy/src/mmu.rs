@@ -1,13 +1,29 @@
-pub struct Mmu {}
+use crate::cpu::{alu::add, Cpu};
+
+pub struct Mmu {
+    cpu: Cpu,
+}
 
 impl Mmu {
+    pub fn new() -> Self {
+        Mmu { cpu: Cpu::new() }
+    }
+
     pub fn read(&self, addr: u16) -> u8 {
-        println!("{:?}", addr);
-        return 0;
+        match addr {
+            0xffff => self.cpu.interrupt_enable,
+            0xff0f => self.cpu.interrupt_flag,
+            _ => {
+                println!("{:?}", addr);
+                0xff
+            }
+        }
     }
 
     pub fn write(&self, addr: u16, value: u8) {
-        println!("{:?}, {:?}", addr, value);
+        match addr {
+            _ => println!("{:?}, {:?}", addr, value),
+        }
     }
 
     pub fn read16(&self, addr: u16) -> u16 {

@@ -1,5 +1,17 @@
+use crate::cpu::alu;
 use crate::cpu::Cpu;
 use crate::mmu::Mmu;
+
+fn push(cpu: &mut Cpu, mmu: &mut Mmu, v: u16) {
+    cpu.sp -= 2;
+    mmu.write16(cpu.sp, v);
+}
+
+fn pop(cpu: &mut Cpu, mmu: &mut Mmu) -> u16 {
+    let r = mmu.read16(cpu.sp);
+    cpu.sp += 2;
+    return r;
+}
 
 pub fn read_bc(cpu: &mut Cpu) -> u16 {
     return (cpu.c as u16) | ((cpu.b as u16) << 8);
@@ -24,6 +36,30 @@ pub fn read_hl(cpu: &mut Cpu) -> u16 {
 pub fn write_hl(cpu: &mut Cpu, v: u16) {
     cpu.h = (v >> 8) as u8;
     cpu.l = (v & 0xff) as u8;
+}
+pub fn read_af(cpu: &mut Cpu) -> u16 {
+    return (cpu.f as u16) | ((cpu.a as u16) << 8);
+}
+
+pub fn write_af(cpu: &mut Cpu, v: u16) {
+    cpu.a = (v >> 8) as u8;
+    cpu.f = (v & 0xff) as u8;
+}
+
+pub fn flag_z(cpu: &mut Cpu) -> bool {
+    return (cpu.f & (1 << 7)) != 0;
+}
+
+pub fn flag_n(cpu: &mut Cpu) -> bool {
+    return (cpu.f & (1 << 6)) != 0;
+}
+
+pub fn flag_h(cpu: &mut Cpu) -> bool {
+    return (cpu.f & (1 << 5)) != 0;
+}
+
+pub fn flag_c(cpu: &mut Cpu) -> bool {
+    return (cpu.f & (1 << 4)) != 0;
 }
 
 #[allow(unused_variables)]
@@ -1939,9 +1975,7 @@ pub fn execute_prefixed0xff(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.a = v;
 }
 #[allow(unused_variables)]
-pub fn execute_unprefixed0x00(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
-}
+pub fn execute_unprefixed0x00(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {}
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x01(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
@@ -1955,19 +1989,28 @@ pub fn execute_unprefixed0x02(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x03(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = read_bc(cpu);
+    let h = r & 0xf == 0xf;
+    r += 1;
+    write_bc(cpu, r);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x04(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.b;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.b = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x05(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.b;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.b = r;
 
     let z = 0; // todo
 }
@@ -1979,7 +2022,7 @@ pub fn execute_unprefixed0x06(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x07(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0x07");
 }
 
 #[allow(unused_variables)]
@@ -1989,7 +2032,10 @@ pub fn execute_unprefixed0x08(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x09(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = read_hl(cpu);
+    let b = read_bc(cpu);
+    let (r, h, c) = alu::add16h(a, b);
+    write_hl(cpu, r);
 }
 
 #[allow(unused_variables)]
@@ -1999,19 +2045,28 @@ pub fn execute_unprefixed0x0a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x0b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = read_bc(cpu);
+    let h = r & 0xf == 0xf;
+    r += 1;
+    write_bc(cpu, r);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x0c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.c;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.c = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x0d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.c;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.c = r;
 
     let z = 0; // todo
 }
@@ -2023,12 +2078,12 @@ pub fn execute_unprefixed0x0e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x0f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0x0F");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x10(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0x10");
 }
 
 #[allow(unused_variables)]
@@ -2043,19 +2098,28 @@ pub fn execute_unprefixed0x12(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x13(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = read_de(cpu);
+    let h = r & 0xf == 0xf;
+    r += 1;
+    write_de(cpu, r);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x14(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.d;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.d = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x15(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.d;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.d = r;
 
     let z = 0; // todo
 }
@@ -2067,17 +2131,20 @@ pub fn execute_unprefixed0x16(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x17(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0x17");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x18(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.pc += arg as u8 as i8 as i16 as u16;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x19(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = read_hl(cpu);
+    let b = read_de(cpu);
+    let (r, h, c) = alu::add16h(a, b);
+    write_hl(cpu, r);
 }
 
 #[allow(unused_variables)]
@@ -2087,19 +2154,28 @@ pub fn execute_unprefixed0x1a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x1b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = read_de(cpu);
+    let h = r & 0xf == 0xf;
+    r += 1;
+    write_de(cpu, r);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x1c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.e;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.e = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x1d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.e;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.e = r;
 
     let z = 0; // todo
 }
@@ -2111,12 +2187,14 @@ pub fn execute_unprefixed0x1e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x1f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0x1F");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x20(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if !flag_z(cpu) {
+        cpu.pc += arg as u8 as i8 as i16 as u16;
+    }
 }
 
 #[allow(unused_variables)]
@@ -2127,25 +2205,34 @@ pub fn execute_unprefixed0x21(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x22(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     mmu.write(read_hl(cpu), cpu.a);
-    let v = read_hl(cpu);
-    write_hl(cpu, v + 1);
+    let hl = read_hl(cpu) + 1;
+    write_hl(cpu, hl);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x23(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = read_hl(cpu);
+    let h = r & 0xf == 0xf;
+    r += 1;
+    write_hl(cpu, r);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x24(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.h;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.h = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x25(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.h;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.h = r;
 
     let z = 0; // todo
 }
@@ -2157,43 +2244,57 @@ pub fn execute_unprefixed0x26(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x27(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0x27");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x28(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if flag_z(cpu) {
+        cpu.pc += arg as u8 as i8 as i16 as u16;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x29(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = read_hl(cpu);
+    let b = read_hl(cpu);
+    let (r, h, c) = alu::add16h(a, b);
+    write_hl(cpu, r);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x2a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a = mmu.read(read_hl(cpu));
-    let v = read_hl(cpu);
-    write_hl(cpu, v + 1);
+    let hl = read_hl(cpu) + 1;
+    write_hl(cpu, hl);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x2b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = read_hl(cpu);
+    let h = r & 0xf == 0xf;
+    r += 1;
+    write_hl(cpu, r);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x2c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.l;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.l = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x2d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.l;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.l = r;
 
     let z = 0; // todo
 }
@@ -2205,12 +2306,14 @@ pub fn execute_unprefixed0x2e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x2f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a = !cpu.a;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x30(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if !flag_c(cpu) {
+        cpu.pc += arg as u8 as i8 as i16 as u16;
+    }
 }
 
 #[allow(unused_variables)]
@@ -2221,25 +2324,34 @@ pub fn execute_unprefixed0x31(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x32(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     mmu.write(read_hl(cpu), cpu.a);
-    let v = read_hl(cpu);
-    write_hl(cpu, v - 1);
+    let hl = read_hl(cpu) - 1;
+    write_hl(cpu, hl);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x33(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.sp;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.sp = r;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x34(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = mmu.read(read_hl(cpu));
+    let h = r & 0xf == 0xf;
+    r += 1;
+    mmu.write(read_hl(cpu), r);
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x35(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = mmu.read(read_hl(cpu));
+    let h = r & 0xf == 0xf;
+    r += 1;
+    mmu.write(read_hl(cpu), r);
 
     let z = 0; // todo
 }
@@ -2251,41 +2363,55 @@ pub fn execute_unprefixed0x36(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x37(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0x37");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x38(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if flag_c(cpu) {
+        cpu.pc += arg as u8 as i8 as i16 as u16;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x39(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = read_hl(cpu);
+    let b = cpu.sp;
+    let (r, h, c) = alu::add16h(a, b);
+    write_hl(cpu, r);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x3a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a = mmu.read(read_hl(cpu));
-    let v = read_hl(cpu);
-    write_hl(cpu, v - 1);
+    let hl = read_hl(cpu) - 1;
+    write_hl(cpu, hl);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x3b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.sp;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.sp = r;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x3c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.a;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x3d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let mut r = cpu.a;
+    let h = r & 0xf == 0xf;
+    r += 1;
+    cpu.a = r;
 
     let z = 0; // todo
 }
@@ -2297,7 +2423,7 @@ pub fn execute_unprefixed0x3e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x3f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let c = !flag_c(cpu);
 }
 
 #[allow(unused_variables)]
@@ -2572,7 +2698,7 @@ pub fn execute_unprefixed0x75(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x76(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0x76");
 }
 
 #[allow(unused_variables)]
@@ -2622,622 +2748,732 @@ pub fn execute_unprefixed0x7f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x80(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.b;
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x81(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.c;
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x82(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.d;
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x83(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.e;
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x84(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.h;
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x85(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.l;
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x86(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = mmu.read(read_hl(cpu));
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x87(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.a;
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x88(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.b;
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x89(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.c;
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x8a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.d;
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x8b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.e;
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x8c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.h;
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x8d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.l;
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x8e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = mmu.read(read_hl(cpu));
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x8f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = cpu.a;
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x90(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x91(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.c, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x92(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.d, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x93(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.e, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x94(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.h, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x95(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.l, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x96(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, mmu.read(read_hl(cpu)), false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x97(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.a, false);
+    cpu.a = r;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x98(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x99(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.c, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.d, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.e, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.h, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.l, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, mmu.read(read_hl(cpu)), flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, cpu.a, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= cpu.b;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= cpu.c;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= cpu.d;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= cpu.e;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= cpu.h;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= cpu.l;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= mmu.read(read_hl(cpu));
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= cpu.a;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= cpu.b;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa9(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= cpu.c;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xaa(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= cpu.d;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xab(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= cpu.e;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xac(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= cpu.h;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xad(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= cpu.l;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xae(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= mmu.read(read_hl(cpu));
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xaf(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= cpu.a;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= cpu.b;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= cpu.c;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= cpu.d;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= cpu.e;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= cpu.h;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= cpu.l;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= mmu.read(read_hl(cpu));
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= cpu.a;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xB8");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb9(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xB9");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xba(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xBA");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbb(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xBB");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbc(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xBC");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbd(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xBD");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbe(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xBE");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbf(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xBF");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if !flag_z(cpu) {
+        cpu.pc = pop(cpu, mmu);
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.sp += 2;
+    write_bc(cpu, mmu.read16(cpu.sp));
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if !flag_z(cpu) {
+        cpu.pc = arg;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.pc = arg;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if !flag_z(cpu) {
+        push(cpu, mmu, cpu.pc);
+        cpu.pc = arg;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    mmu.write16(cpu.sp, read_bc(cpu));
+    cpu.sp -= 2;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = arg as u8;
+    let (r, h, c) = alu::add(a, b, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = 0x00;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if flag_z(cpu) {
+        cpu.pc = pop(cpu, mmu);
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc9(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.pc = pop(cpu, mmu);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xca(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if flag_z(cpu) {
+        cpu.pc = arg;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xcb(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xCB");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xcc(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if flag_z(cpu) {
+        push(cpu, mmu, cpu.pc);
+        cpu.pc = arg;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xcd(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = arg;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xce(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.a;
+    let b = arg as u8;
+    let (r, h, c) = alu::add(a, b, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xcf(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = 0x08;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if !flag_c(cpu) {
+        cpu.pc = pop(cpu, mmu);
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.sp += 2;
+    write_de(cpu, mmu.read16(cpu.sp));
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if !flag_c(cpu) {
+        cpu.pc = arg;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xD3");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if !flag_c(cpu) {
+        push(cpu, mmu, cpu.pc);
+        cpu.pc = arg;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    mmu.write16(cpu.sp, read_de(cpu));
+    cpu.sp -= 2;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, arg as u8, false);
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = 0x10;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if flag_c(cpu) {
+        cpu.pc = pop(cpu, mmu);
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd9(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xD9");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xda(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if flag_c(cpu) {
+        cpu.pc = arg;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xdb(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xDB");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xdc(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    if flag_c(cpu) {
+        push(cpu, mmu, cpu.pc);
+        cpu.pc = arg;
+    }
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xdd(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xDD");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xde(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let (r, h, c) = alu::sub(cpu.a, arg as u8, flag_c(cpu));
+    cpu.a = r;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xdf(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = 0x18;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xE0");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.sp += 2;
+    write_hl(cpu, mmu.read16(cpu.sp));
 }
 
 #[allow(unused_variables)]
@@ -3247,39 +3483,44 @@ pub fn execute_unprefixed0xe2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xE3");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xE4");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    mmu.write16(cpu.sp, read_hl(cpu));
+    cpu.sp -= 2;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a &= arg as u8;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = 0x20;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    let a = cpu.sp;
+    let b = arg as u8 as i8 as i16 as u16;
+    let (r, h, c) = alu::add16l(a, b);
+    cpu.sp = r;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe9(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.pc = read_hl(cpu);
 }
 
 #[allow(unused_variables)]
@@ -3289,39 +3530,41 @@ pub fn execute_unprefixed0xea(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xeb(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xEB");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xec(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xEC");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xed(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xED");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xee(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a ^= arg as u8;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xef(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = 0x28;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xF0");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.sp += 2;
+    write_af(cpu, mmu.read16(cpu.sp));
 
     let z = 0; // todo
 }
@@ -3333,34 +3576,37 @@ pub fn execute_unprefixed0xf2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xF3");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xF4");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    mmu.write16(cpu.sp, read_af(cpu));
+    cpu.sp -= 2;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    cpu.a |= arg as u8;
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = 0x30;
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    write_hl(cpu, cpu.sp + (arg as u8 as i8 as i16 as u16));
+    let (r, h, c) = alu::add16l(cpu.sp, arg as u8 as i8 as i16 as u16);
+    write_hl(cpu, r);
 }
 
 #[allow(unused_variables)]
@@ -3375,29 +3621,30 @@ pub fn execute_unprefixed0xfa(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xfb(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xFB");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xfc(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xFC");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xfd(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xFD");
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xfe(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    panic!("invalid opcode 0xFE");
 
     let z = 0; // todo
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xff(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("not implemented");
+    push(cpu, mmu, cpu.pc);
+    cpu.pc = 0x38;
 }
 
 pub fn execute_prefixed(cpu: &mut Cpu, mmu: &mut Mmu, opcode: u8) {
