@@ -2,7 +2,7 @@ use crate::cpu::alu;
 use crate::cpu::Cpu;
 use crate::mmu::Mmu;
 
-fn push(cpu: &mut Cpu, mmu: &mut Mmu, v: u16) {
+pub fn push(cpu: &mut Cpu, mmu: &mut Mmu, v: u16) {
     cpu.sp -= 2;
     mmu.write16(cpu.sp, v);
 }
@@ -70,7 +70,7 @@ pub fn execute_prefixed0x00(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.b = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x01(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -80,7 +80,7 @@ pub fn execute_prefixed0x01(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.c = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x02(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -90,7 +90,7 @@ pub fn execute_prefixed0x02(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.d = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x03(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -100,7 +100,7 @@ pub fn execute_prefixed0x03(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.e = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x04(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -110,7 +110,7 @@ pub fn execute_prefixed0x04(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.h = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x05(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -120,7 +120,7 @@ pub fn execute_prefixed0x05(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.l = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x06(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -130,7 +130,7 @@ pub fn execute_prefixed0x06(cpu: &mut Cpu, mmu: &mut Mmu) {
     mmu.write(read_hl(cpu), v);
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x07(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -140,7 +140,7 @@ pub fn execute_prefixed0x07(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.a = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x08(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -150,7 +150,7 @@ pub fn execute_prefixed0x08(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.b = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x09(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -160,7 +160,7 @@ pub fn execute_prefixed0x09(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.c = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x0a(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -170,7 +170,7 @@ pub fn execute_prefixed0x0a(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.d = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x0b(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -180,7 +180,7 @@ pub fn execute_prefixed0x0b(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.e = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x0c(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -190,7 +190,7 @@ pub fn execute_prefixed0x0c(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.h = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x0d(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -200,7 +200,7 @@ pub fn execute_prefixed0x0d(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.l = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x0e(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -210,7 +210,7 @@ pub fn execute_prefixed0x0e(cpu: &mut Cpu, mmu: &mut Mmu) {
     mmu.write(read_hl(cpu), v);
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x0f(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -220,7 +220,7 @@ pub fn execute_prefixed0x0f(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.a = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x10(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -230,7 +230,7 @@ pub fn execute_prefixed0x10(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.b = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x11(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -240,7 +240,7 @@ pub fn execute_prefixed0x11(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.c = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x12(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -250,7 +250,7 @@ pub fn execute_prefixed0x12(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.d = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x13(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -260,7 +260,7 @@ pub fn execute_prefixed0x13(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.e = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x14(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -270,7 +270,7 @@ pub fn execute_prefixed0x14(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.h = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x15(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -280,7 +280,7 @@ pub fn execute_prefixed0x15(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.l = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x16(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -290,7 +290,7 @@ pub fn execute_prefixed0x16(cpu: &mut Cpu, mmu: &mut Mmu) {
     mmu.write(read_hl(cpu), v);
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x17(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -300,7 +300,7 @@ pub fn execute_prefixed0x17(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.a = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x18(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -310,7 +310,7 @@ pub fn execute_prefixed0x18(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.b = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x19(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -320,7 +320,7 @@ pub fn execute_prefixed0x19(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.c = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x1a(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -330,7 +330,7 @@ pub fn execute_prefixed0x1a(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.d = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x1b(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -340,7 +340,7 @@ pub fn execute_prefixed0x1b(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.e = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x1c(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -350,7 +350,7 @@ pub fn execute_prefixed0x1c(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.h = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x1d(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -360,7 +360,7 @@ pub fn execute_prefixed0x1d(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.l = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x1e(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -370,7 +370,7 @@ pub fn execute_prefixed0x1e(cpu: &mut Cpu, mmu: &mut Mmu) {
     mmu.write(read_hl(cpu), v);
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x1f(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -380,7 +380,7 @@ pub fn execute_prefixed0x1f(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.a = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x20(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -390,7 +390,7 @@ pub fn execute_prefixed0x20(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.b = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x21(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -400,7 +400,7 @@ pub fn execute_prefixed0x21(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.c = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x22(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -410,7 +410,7 @@ pub fn execute_prefixed0x22(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.d = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x23(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -420,7 +420,7 @@ pub fn execute_prefixed0x23(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.e = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x24(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -430,7 +430,7 @@ pub fn execute_prefixed0x24(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.h = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x25(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -440,7 +440,7 @@ pub fn execute_prefixed0x25(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.l = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x26(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -450,7 +450,7 @@ pub fn execute_prefixed0x26(cpu: &mut Cpu, mmu: &mut Mmu) {
     mmu.write(read_hl(cpu), v);
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x27(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -460,7 +460,7 @@ pub fn execute_prefixed0x27(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.a = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x28(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -470,7 +470,7 @@ pub fn execute_prefixed0x28(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.b = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x29(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -480,7 +480,7 @@ pub fn execute_prefixed0x29(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.c = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x2a(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -490,7 +490,7 @@ pub fn execute_prefixed0x2a(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.d = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x2b(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -500,7 +500,7 @@ pub fn execute_prefixed0x2b(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.e = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x2c(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -510,7 +510,7 @@ pub fn execute_prefixed0x2c(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.h = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x2d(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -520,7 +520,7 @@ pub fn execute_prefixed0x2d(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.l = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x2e(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -530,7 +530,7 @@ pub fn execute_prefixed0x2e(cpu: &mut Cpu, mmu: &mut Mmu) {
     mmu.write(read_hl(cpu), v);
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x2f(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -540,7 +540,7 @@ pub fn execute_prefixed0x2f(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.a = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x30(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -622,7 +622,7 @@ pub fn execute_prefixed0x38(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.b = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x39(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -632,7 +632,7 @@ pub fn execute_prefixed0x39(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.c = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x3a(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -642,7 +642,7 @@ pub fn execute_prefixed0x3a(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.d = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x3b(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -652,7 +652,7 @@ pub fn execute_prefixed0x3b(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.e = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x3c(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -662,7 +662,7 @@ pub fn execute_prefixed0x3c(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.h = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x3d(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -672,7 +672,7 @@ pub fn execute_prefixed0x3d(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.l = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x3e(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -682,7 +682,7 @@ pub fn execute_prefixed0x3e(cpu: &mut Cpu, mmu: &mut Mmu) {
     mmu.write(read_hl(cpu), v);
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x3f(cpu: &mut Cpu, mmu: &mut Mmu) {
@@ -692,1287 +692,1415 @@ pub fn execute_prefixed0x3f(cpu: &mut Cpu, mmu: &mut Mmu) {
     cpu.a = v;
     let z = v == 0;
 
-    cpu.f = (c << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x40(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
+    let z = (v & (1 << 0)) != 0;
     cpu.b = v;
-    let z = (v & (1 << 0)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x41(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
+    let z = (v & (1 << 0)) != 0;
     cpu.c = v;
-    let z = (v & (1 << 0)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x42(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
+    let z = (v & (1 << 0)) != 0;
     cpu.d = v;
-    let z = (v & (1 << 0)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x43(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
+    let z = (v & (1 << 0)) != 0;
     cpu.e = v;
-    let z = (v & (1 << 0)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x44(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
+    let z = (v & (1 << 0)) != 0;
     cpu.h = v;
-    let z = (v & (1 << 0)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x45(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
+    let z = (v & (1 << 0)) != 0;
     cpu.l = v;
-    let z = (v & (1 << 0)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x46(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
+    let z = (v & (1 << 0)) != 0;
     mmu.write(read_hl(cpu), v);
-    let z = (v & (1 << 0)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x47(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
+    let z = (v & (1 << 0)) != 0;
     cpu.a = v;
-    let z = (v & (1 << 0)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x48(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
+    let z = (v & (1 << 1)) != 0;
     cpu.b = v;
-    let z = (v & (1 << 1)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x49(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
+    let z = (v & (1 << 1)) != 0;
     cpu.c = v;
-    let z = (v & (1 << 1)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x4a(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
+    let z = (v & (1 << 1)) != 0;
     cpu.d = v;
-    let z = (v & (1 << 1)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x4b(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
+    let z = (v & (1 << 1)) != 0;
     cpu.e = v;
-    let z = (v & (1 << 1)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x4c(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
+    let z = (v & (1 << 1)) != 0;
     cpu.h = v;
-    let z = (v & (1 << 1)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x4d(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
+    let z = (v & (1 << 1)) != 0;
     cpu.l = v;
-    let z = (v & (1 << 1)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x4e(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
+    let z = (v & (1 << 1)) != 0;
     mmu.write(read_hl(cpu), v);
-    let z = (v & (1 << 1)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x4f(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
+    let z = (v & (1 << 1)) != 0;
     cpu.a = v;
-    let z = (v & (1 << 1)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x50(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
+    let z = (v & (1 << 2)) != 0;
     cpu.b = v;
-    let z = (v & (1 << 2)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x51(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
+    let z = (v & (1 << 2)) != 0;
     cpu.c = v;
-    let z = (v & (1 << 2)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x52(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
+    let z = (v & (1 << 2)) != 0;
     cpu.d = v;
-    let z = (v & (1 << 2)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x53(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
+    let z = (v & (1 << 2)) != 0;
     cpu.e = v;
-    let z = (v & (1 << 2)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x54(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
+    let z = (v & (1 << 2)) != 0;
     cpu.h = v;
-    let z = (v & (1 << 2)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x55(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
+    let z = (v & (1 << 2)) != 0;
     cpu.l = v;
-    let z = (v & (1 << 2)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x56(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
+    let z = (v & (1 << 2)) != 0;
     mmu.write(read_hl(cpu), v);
-    let z = (v & (1 << 2)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x57(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
+    let z = (v & (1 << 2)) != 0;
     cpu.a = v;
-    let z = (v & (1 << 2)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x58(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
+    let z = (v & (1 << 3)) != 0;
     cpu.b = v;
-    let z = (v & (1 << 3)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x59(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
+    let z = (v & (1 << 3)) != 0;
     cpu.c = v;
-    let z = (v & (1 << 3)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x5a(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
+    let z = (v & (1 << 3)) != 0;
     cpu.d = v;
-    let z = (v & (1 << 3)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x5b(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
+    let z = (v & (1 << 3)) != 0;
     cpu.e = v;
-    let z = (v & (1 << 3)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x5c(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
+    let z = (v & (1 << 3)) != 0;
     cpu.h = v;
-    let z = (v & (1 << 3)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x5d(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
+    let z = (v & (1 << 3)) != 0;
     cpu.l = v;
-    let z = (v & (1 << 3)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x5e(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
+    let z = (v & (1 << 3)) != 0;
     mmu.write(read_hl(cpu), v);
-    let z = (v & (1 << 3)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x5f(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
+    let z = (v & (1 << 3)) != 0;
     cpu.a = v;
-    let z = (v & (1 << 3)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x60(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
+    let z = (v & (1 << 4)) != 0;
     cpu.b = v;
-    let z = (v & (1 << 4)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x61(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
+    let z = (v & (1 << 4)) != 0;
     cpu.c = v;
-    let z = (v & (1 << 4)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x62(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
+    let z = (v & (1 << 4)) != 0;
     cpu.d = v;
-    let z = (v & (1 << 4)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x63(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
+    let z = (v & (1 << 4)) != 0;
     cpu.e = v;
-    let z = (v & (1 << 4)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x64(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
+    let z = (v & (1 << 4)) != 0;
     cpu.h = v;
-    let z = (v & (1 << 4)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x65(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
+    let z = (v & (1 << 4)) != 0;
     cpu.l = v;
-    let z = (v & (1 << 4)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x66(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
+    let z = (v & (1 << 4)) != 0;
     mmu.write(read_hl(cpu), v);
-    let z = (v & (1 << 4)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x67(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
+    let z = (v & (1 << 4)) != 0;
     cpu.a = v;
-    let z = (v & (1 << 4)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x68(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
+    let z = (v & (1 << 5)) != 0;
     cpu.b = v;
-    let z = (v & (1 << 5)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x69(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
+    let z = (v & (1 << 5)) != 0;
     cpu.c = v;
-    let z = (v & (1 << 5)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x6a(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
+    let z = (v & (1 << 5)) != 0;
     cpu.d = v;
-    let z = (v & (1 << 5)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x6b(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
+    let z = (v & (1 << 5)) != 0;
     cpu.e = v;
-    let z = (v & (1 << 5)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x6c(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
+    let z = (v & (1 << 5)) != 0;
     cpu.h = v;
-    let z = (v & (1 << 5)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x6d(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
+    let z = (v & (1 << 5)) != 0;
     cpu.l = v;
-    let z = (v & (1 << 5)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x6e(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
+    let z = (v & (1 << 5)) != 0;
     mmu.write(read_hl(cpu), v);
-    let z = (v & (1 << 5)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x6f(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
+    let z = (v & (1 << 5)) != 0;
     cpu.a = v;
-    let z = (v & (1 << 5)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x70(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
+    let z = (v & (1 << 6)) != 0;
     cpu.b = v;
-    let z = (v & (1 << 6)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x71(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
+    let z = (v & (1 << 6)) != 0;
     cpu.c = v;
-    let z = (v & (1 << 6)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x72(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
+    let z = (v & (1 << 6)) != 0;
     cpu.d = v;
-    let z = (v & (1 << 6)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x73(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
+    let z = (v & (1 << 6)) != 0;
     cpu.e = v;
-    let z = (v & (1 << 6)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x74(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
+    let z = (v & (1 << 6)) != 0;
     cpu.h = v;
-    let z = (v & (1 << 6)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x75(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
+    let z = (v & (1 << 6)) != 0;
     cpu.l = v;
-    let z = (v & (1 << 6)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x76(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
+    let z = (v & (1 << 6)) != 0;
     mmu.write(read_hl(cpu), v);
-    let z = (v & (1 << 6)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x77(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
+    let z = (v & (1 << 6)) != 0;
     cpu.a = v;
-    let z = (v & (1 << 6)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x78(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
+    let z = (v & (1 << 7)) != 0;
     cpu.b = v;
-    let z = (v & (1 << 7)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x79(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
+    let z = (v & (1 << 7)) != 0;
     cpu.c = v;
-    let z = (v & (1 << 7)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x7a(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
+    let z = (v & (1 << 7)) != 0;
     cpu.d = v;
-    let z = (v & (1 << 7)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x7b(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
+    let z = (v & (1 << 7)) != 0;
     cpu.e = v;
-    let z = (v & (1 << 7)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x7c(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
+    let z = (v & (1 << 7)) != 0;
     cpu.h = v;
-    let z = (v & (1 << 7)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x7d(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
+    let z = (v & (1 << 7)) != 0;
     cpu.l = v;
-    let z = (v & (1 << 7)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x7e(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
+    let z = (v & (1 << 7)) != 0;
     mmu.write(read_hl(cpu), v);
-    let z = (v & (1 << 7)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x7f(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
+    let z = (v & (1 << 7)) != 0;
     cpu.a = v;
-    let z = (v & (1 << 7)) == 0;
 
-    cpu.f = (((cpu.f >> 7) & 1) << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x80(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v &= !(1 << 0);
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x81(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v &= !(1 << 0);
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x82(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v &= !(1 << 0);
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x83(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v &= !(1 << 0);
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x84(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v &= !(1 << 0);
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x85(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v &= !(1 << 0);
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x86(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v &= !(1 << 0);
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x87(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v &= !(1 << 0);
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x88(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v &= !(1 << 1);
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x89(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v &= !(1 << 1);
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x8a(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v &= !(1 << 1);
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x8b(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v &= !(1 << 1);
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x8c(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v &= !(1 << 1);
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x8d(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v &= !(1 << 1);
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x8e(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v &= !(1 << 1);
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x8f(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v &= !(1 << 1);
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x90(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v &= !(1 << 2);
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x91(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v &= !(1 << 2);
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x92(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v &= !(1 << 2);
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x93(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v &= !(1 << 2);
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x94(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v &= !(1 << 2);
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x95(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v &= !(1 << 2);
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x96(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v &= !(1 << 2);
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x97(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v &= !(1 << 2);
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x98(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v &= !(1 << 3);
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x99(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v &= !(1 << 3);
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x9a(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v &= !(1 << 3);
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x9b(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v &= !(1 << 3);
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x9c(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v &= !(1 << 3);
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x9d(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v &= !(1 << 3);
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x9e(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v &= !(1 << 3);
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0x9f(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v &= !(1 << 3);
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa0(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v &= !(1 << 4);
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa1(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v &= !(1 << 4);
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa2(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v &= !(1 << 4);
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa3(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v &= !(1 << 4);
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa4(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v &= !(1 << 4);
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa5(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v &= !(1 << 4);
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa6(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v &= !(1 << 4);
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa7(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v &= !(1 << 4);
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa8(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v &= !(1 << 5);
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xa9(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v &= !(1 << 5);
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xaa(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v &= !(1 << 5);
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xab(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v &= !(1 << 5);
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xac(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v &= !(1 << 5);
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xad(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v &= !(1 << 5);
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xae(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v &= !(1 << 5);
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xaf(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v &= !(1 << 5);
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb0(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v &= !(1 << 6);
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb1(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v &= !(1 << 6);
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb2(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v &= !(1 << 6);
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb3(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v &= !(1 << 6);
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb4(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v &= !(1 << 6);
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb5(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v &= !(1 << 6);
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb6(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v &= !(1 << 6);
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb7(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v &= !(1 << 6);
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb8(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v &= !(1 << 7);
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xb9(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v &= !(1 << 7);
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xba(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v &= !(1 << 7);
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xbb(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v &= !(1 << 7);
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xbc(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v &= !(1 << 7);
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xbd(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v &= !(1 << 7);
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xbe(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v &= !(1 << 7);
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xbf(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v &= !(1 << 7);
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc0(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v |= 1 << 0;
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc1(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v |= 1 << 0;
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc2(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v |= 1 << 0;
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc3(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v |= 1 << 0;
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc4(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v |= 1 << 0;
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc5(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v |= 1 << 0;
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc6(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v |= 1 << 0;
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc7(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v |= 1 << 0;
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc8(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v |= 1 << 1;
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xc9(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v |= 1 << 1;
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xca(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v |= 1 << 1;
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xcb(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v |= 1 << 1;
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xcc(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v |= 1 << 1;
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xcd(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v |= 1 << 1;
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xce(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v |= 1 << 1;
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xcf(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v |= 1 << 1;
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd0(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v |= 1 << 2;
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd1(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v |= 1 << 2;
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd2(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v |= 1 << 2;
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd3(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v |= 1 << 2;
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd4(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v |= 1 << 2;
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd5(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v |= 1 << 2;
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd6(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v |= 1 << 2;
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd7(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v |= 1 << 2;
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd8(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v |= 1 << 3;
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xd9(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v |= 1 << 3;
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xda(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v |= 1 << 3;
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xdb(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v |= 1 << 3;
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xdc(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v |= 1 << 3;
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xdd(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v |= 1 << 3;
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xde(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v |= 1 << 3;
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xdf(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v |= 1 << 3;
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe0(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v |= 1 << 4;
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe1(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v |= 1 << 4;
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe2(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v |= 1 << 4;
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe3(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v |= 1 << 4;
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe4(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v |= 1 << 4;
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe5(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v |= 1 << 4;
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe6(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v |= 1 << 4;
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe7(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v |= 1 << 4;
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe8(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v |= 1 << 5;
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xe9(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v |= 1 << 5;
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xea(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v |= 1 << 5;
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xeb(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v |= 1 << 5;
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xec(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v |= 1 << 5;
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xed(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v |= 1 << 5;
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xee(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v |= 1 << 5;
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xef(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v |= 1 << 5;
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf0(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v |= 1 << 6;
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf1(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v |= 1 << 6;
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf2(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v |= 1 << 6;
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf3(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v |= 1 << 6;
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf4(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v |= 1 << 6;
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf5(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v |= 1 << 6;
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf6(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v |= 1 << 6;
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf7(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v |= 1 << 6;
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf8(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.b;
     v |= 1 << 7;
     cpu.b = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xf9(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.c;
     v |= 1 << 7;
     cpu.c = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xfa(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.d;
     v |= 1 << 7;
     cpu.d = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xfb(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.e;
     v |= 1 << 7;
     cpu.e = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xfc(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.h;
     v |= 1 << 7;
     cpu.h = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xfd(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.l;
     v |= 1 << 7;
     cpu.l = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xfe(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = mmu.read(read_hl(cpu));
     v |= 1 << 7;
     mmu.write(read_hl(cpu), v);
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_prefixed0xff(cpu: &mut Cpu, mmu: &mut Mmu) {
     let mut v = cpu.a;
     v |= 1 << 7;
     cpu.a = v;
+    let z = v == 0;
 }
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x00(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {}
@@ -1992,6 +2120,7 @@ pub fn execute_unprefixed0x03(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = read_bc(cpu);
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     write_bc(cpu, r);
 }
 
@@ -2000,19 +2129,21 @@ pub fn execute_unprefixed0x04(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.b;
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     cpu.b = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x05(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.b;
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     cpu.b = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2022,7 +2153,10 @@ pub fn execute_unprefixed0x06(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x07(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0x07");
+    let c = cpu.a >> 7;
+    cpu.a = (cpu.a << 1) | c;
+
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | (0 << 7);
 }
 
 #[allow(unused_variables)]
@@ -2036,6 +2170,8 @@ pub fn execute_unprefixed0x09(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = read_bc(cpu);
     let (r, h, c) = alu::add16h(a, b);
     write_hl(cpu, r);
+
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | (cpu.f & (1 << 7));
 }
 
 #[allow(unused_variables)]
@@ -2046,8 +2182,9 @@ pub fn execute_unprefixed0x0a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x0b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = read_bc(cpu);
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     write_bc(cpu, r);
 }
 
@@ -2056,19 +2193,21 @@ pub fn execute_unprefixed0x0c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.c;
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     cpu.c = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x0d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.c;
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     cpu.c = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2078,12 +2217,15 @@ pub fn execute_unprefixed0x0e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x0f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0x0F");
+    let c = cpu.a & 1;
+    cpu.a = (cpu.a >> 1) | (c << 7);
+
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | (0 << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x10(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0x10");
+    panic!("STOP opcode 0x10");
 }
 
 #[allow(unused_variables)]
@@ -2101,6 +2243,7 @@ pub fn execute_unprefixed0x13(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = read_de(cpu);
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     write_de(cpu, r);
 }
 
@@ -2109,19 +2252,21 @@ pub fn execute_unprefixed0x14(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.d;
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     cpu.d = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x15(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.d;
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     cpu.d = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2131,12 +2276,15 @@ pub fn execute_unprefixed0x16(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x17(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0x17");
+    let c = cpu.a >> 7;
+    cpu.a = (cpu.a << 1) | ((cpu.f >> 4) & 1);
+
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | (0 << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x18(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    cpu.pc += arg as u8 as i8 as i16 as u16;
+    cpu.pc = (cpu.pc as i32 + arg as u8 as i8 as i32) as u16;
 }
 
 #[allow(unused_variables)]
@@ -2145,6 +2293,8 @@ pub fn execute_unprefixed0x19(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = read_de(cpu);
     let (r, h, c) = alu::add16h(a, b);
     write_hl(cpu, r);
+
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | (cpu.f & (1 << 7));
 }
 
 #[allow(unused_variables)]
@@ -2155,8 +2305,9 @@ pub fn execute_unprefixed0x1a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x1b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = read_de(cpu);
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     write_de(cpu, r);
 }
 
@@ -2165,19 +2316,21 @@ pub fn execute_unprefixed0x1c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.e;
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     cpu.e = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x1d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.e;
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     cpu.e = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2187,13 +2340,16 @@ pub fn execute_unprefixed0x1e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x1f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0x1F");
+    let c = cpu.a & 1;
+    cpu.a = (cpu.a >> 1) | ((cpu.f << 3) & 0x80);
+
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | (0 << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x20(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     if !flag_z(cpu) {
-        cpu.pc += arg as u8 as i8 as i16 as u16;
+        cpu.pc = (cpu.pc as i32 + arg as u8 as i8 as i32) as u16;
     }
 }
 
@@ -2214,6 +2370,7 @@ pub fn execute_unprefixed0x23(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = read_hl(cpu);
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     write_hl(cpu, r);
 }
 
@@ -2222,19 +2379,21 @@ pub fn execute_unprefixed0x24(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.h;
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     cpu.h = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x25(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.h;
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     cpu.h = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2244,15 +2403,17 @@ pub fn execute_unprefixed0x26(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x27(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0x27");
+    let (r, c) = alu::bcd_adjust(cpu.a, flag_n(cpu), flag_h(cpu), flag_c(cpu));
+    cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (cpu.f & (1 << 6)) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x28(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     if flag_z(cpu) {
-        cpu.pc += arg as u8 as i8 as i16 as u16;
+        cpu.pc = (cpu.pc as i32 + arg as u8 as i8 as i32) as u16;
     }
 }
 
@@ -2262,6 +2423,8 @@ pub fn execute_unprefixed0x29(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = read_hl(cpu);
     let (r, h, c) = alu::add16h(a, b);
     write_hl(cpu, r);
+
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | (cpu.f & (1 << 7));
 }
 
 #[allow(unused_variables)]
@@ -2274,8 +2437,9 @@ pub fn execute_unprefixed0x2a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x2b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = read_hl(cpu);
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     write_hl(cpu, r);
 }
 
@@ -2284,19 +2448,21 @@ pub fn execute_unprefixed0x2c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.l;
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     cpu.l = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x2d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.l;
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     cpu.l = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2307,12 +2473,14 @@ pub fn execute_unprefixed0x2e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x2f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a = !cpu.a;
+
+    cpu.f = (cpu.f & (1 << 4)) | (1 << 5) | (1 << 6) | (cpu.f & (1 << 7));
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x30(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     if !flag_c(cpu) {
-        cpu.pc += arg as u8 as i8 as i16 as u16;
+        cpu.pc = (cpu.pc as i32 + arg as u8 as i8 as i32) as u16;
     }
 }
 
@@ -2333,6 +2501,7 @@ pub fn execute_unprefixed0x33(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.sp;
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     cpu.sp = r;
 }
 
@@ -2341,19 +2510,21 @@ pub fn execute_unprefixed0x34(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = mmu.read(read_hl(cpu));
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     mmu.write(read_hl(cpu), r);
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x35(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = mmu.read(read_hl(cpu));
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     mmu.write(read_hl(cpu), r);
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2363,13 +2534,15 @@ pub fn execute_unprefixed0x36(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x37(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0x37");
+    cpu.f |= 1 << 4;
+
+    cpu.f = (1 << 4) | (0 << 5) | (0 << 6) | (cpu.f & (1 << 7));
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x38(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     if flag_c(cpu) {
-        cpu.pc += arg as u8 as i8 as i16 as u16;
+        cpu.pc = (cpu.pc as i32 + arg as u8 as i8 as i32) as u16;
     }
 }
 
@@ -2379,6 +2552,8 @@ pub fn execute_unprefixed0x39(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.sp;
     let (r, h, c) = alu::add16h(a, b);
     write_hl(cpu, r);
+
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | (cpu.f & (1 << 7));
 }
 
 #[allow(unused_variables)]
@@ -2391,8 +2566,9 @@ pub fn execute_unprefixed0x3a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x3b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.sp;
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     cpu.sp = r;
 }
 
@@ -2401,19 +2577,21 @@ pub fn execute_unprefixed0x3c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.a;
     let h = r & 0xf == 0xf;
     r += 1;
+    let z = r == 0;
     cpu.a = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x3d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let mut r = cpu.a;
-    let h = r & 0xf == 0xf;
-    r += 1;
+    let h = 0;
+    r -= 1;
+    let z = r == 0;
     cpu.a = r;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2424,6 +2602,8 @@ pub fn execute_unprefixed0x3e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x3f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let c = !flag_c(cpu);
+
+    cpu.f = ((c as u8) << 4) | (0 << 5) | (0 << 6) | (cpu.f & (1 << 7));
 }
 
 #[allow(unused_variables)]
@@ -2698,7 +2878,7 @@ pub fn execute_unprefixed0x75(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x76(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0x76");
+    cpu.halt = true;
 }
 
 #[allow(unused_variables)]
@@ -2752,8 +2932,9 @@ pub fn execute_unprefixed0x80(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.b;
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2762,8 +2943,9 @@ pub fn execute_unprefixed0x81(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.c;
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2772,8 +2954,9 @@ pub fn execute_unprefixed0x82(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.d;
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2782,8 +2965,9 @@ pub fn execute_unprefixed0x83(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.e;
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2792,8 +2976,9 @@ pub fn execute_unprefixed0x84(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.h;
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2802,8 +2987,9 @@ pub fn execute_unprefixed0x85(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.l;
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2812,8 +2998,9 @@ pub fn execute_unprefixed0x86(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = mmu.read(read_hl(cpu));
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2822,8 +3009,9 @@ pub fn execute_unprefixed0x87(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.a;
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2832,8 +3020,9 @@ pub fn execute_unprefixed0x88(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.b;
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2842,8 +3031,9 @@ pub fn execute_unprefixed0x89(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.c;
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2852,8 +3042,9 @@ pub fn execute_unprefixed0x8a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.d;
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2862,8 +3053,9 @@ pub fn execute_unprefixed0x8b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.e;
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2872,8 +3064,9 @@ pub fn execute_unprefixed0x8c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.h;
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2882,8 +3075,9 @@ pub fn execute_unprefixed0x8d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.l;
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2892,8 +3086,9 @@ pub fn execute_unprefixed0x8e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = mmu.read(read_hl(cpu));
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -2902,354 +3097,406 @@ pub fn execute_unprefixed0x8f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = cpu.a;
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x90(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x91(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.c, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x92(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.d, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x93(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.e, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x94(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.h, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x95(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.l, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x96(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, mmu.read(read_hl(cpu)), false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x97(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.a, false);
     cpu.a = r;
+
+    cpu.f = (0 << 4) | (0 << 5) | (1 << 6) | (1 << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x98(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x99(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.c, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9a(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.d, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9b(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.e, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9c(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.h, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9d(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.l, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9e(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, mmu.read(read_hl(cpu)), flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0x9f(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, cpu.a, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (cpu.f & (1 << 4)) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= cpu.b;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= cpu.c;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= cpu.d;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= cpu.e;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= cpu.h;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= cpu.l;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= mmu.read(read_hl(cpu));
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= cpu.a;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= cpu.b;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xa9(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= cpu.c;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xaa(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= cpu.d;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xab(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= cpu.e;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xac(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= cpu.h;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xad(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= cpu.l;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xae(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= mmu.read(read_hl(cpu));
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xaf(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= cpu.a;
+
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | (1 << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= cpu.b;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= cpu.c;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= cpu.d;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= cpu.e;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= cpu.h;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= cpu.l;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= mmu.read(read_hl(cpu));
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= cpu.a;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xB8");
+    let (r, h, c) = alu::sub(cpu.a, cpu.b, false);
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xb9(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xB9");
+    let (r, h, c) = alu::sub(cpu.a, cpu.c, false);
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xba(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xBA");
+    let (r, h, c) = alu::sub(cpu.a, cpu.d, false);
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbb(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xBB");
+    let (r, h, c) = alu::sub(cpu.a, cpu.e, false);
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbc(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xBC");
+    let (r, h, c) = alu::sub(cpu.a, cpu.h, false);
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbd(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xBD");
+    let (r, h, c) = alu::sub(cpu.a, cpu.l, false);
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbe(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xBE");
+    let (r, h, c) = alu::sub(cpu.a, mmu.read(read_hl(cpu)), false);
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xbf(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xBF");
+    let (r, h, c) = alu::sub(cpu.a, cpu.a, false);
+
+    cpu.f = (0 << 4) | (0 << 5) | (1 << 6) | (1 << 7);
 }
 
 #[allow(unused_variables)]
@@ -3261,8 +3508,8 @@ pub fn execute_unprefixed0xc0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    cpu.sp += 2;
-    write_bc(cpu, mmu.read16(cpu.sp));
+    let v = pop(cpu, mmu);
+    write_bc(cpu, v);
 }
 
 #[allow(unused_variables)]
@@ -3287,8 +3534,8 @@ pub fn execute_unprefixed0xc4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xc5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    mmu.write16(cpu.sp, read_bc(cpu));
-    cpu.sp -= 2;
+    let v = read_bc(cpu);
+    push(cpu, mmu, v);
 }
 
 #[allow(unused_variables)]
@@ -3297,8 +3544,9 @@ pub fn execute_unprefixed0xc6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = arg as u8;
     let (r, h, c) = alu::add(a, b, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -3351,8 +3599,9 @@ pub fn execute_unprefixed0xce(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = arg as u8;
     let (r, h, c) = alu::add(a, b, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -3370,8 +3619,8 @@ pub fn execute_unprefixed0xd0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    cpu.sp += 2;
-    write_de(cpu, mmu.read16(cpu.sp));
+    let v = pop(cpu, mmu);
+    write_de(cpu, v);
 }
 
 #[allow(unused_variables)]
@@ -3396,16 +3645,17 @@ pub fn execute_unprefixed0xd4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    mmu.write16(cpu.sp, read_de(cpu));
-    cpu.sp -= 2;
+    let v = read_de(cpu);
+    push(cpu, mmu, v);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, arg as u8, false);
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -3423,7 +3673,8 @@ pub fn execute_unprefixed0xd8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xd9(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xD9");
+    cpu.pc = pop(cpu, mmu);
+    cpu.interrupt_master_enable = true;
 }
 
 #[allow(unused_variables)]
@@ -3455,8 +3706,9 @@ pub fn execute_unprefixed0xdd(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 pub fn execute_unprefixed0xde(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::sub(cpu.a, arg as u8, flag_c(cpu));
     cpu.a = r;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -3467,13 +3719,13 @@ pub fn execute_unprefixed0xdf(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xE0");
+    mmu.write(arg + 0xff00, cpu.a);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    cpu.sp += 2;
-    write_hl(cpu, mmu.read16(cpu.sp));
+    let v = pop(cpu, mmu);
+    write_hl(cpu, v);
 }
 
 #[allow(unused_variables)]
@@ -3493,15 +3745,16 @@ pub fn execute_unprefixed0xe4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    mmu.write16(cpu.sp, read_hl(cpu));
-    cpu.sp -= 2;
+    let v = read_hl(cpu);
+    push(cpu, mmu, v);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xe6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a &= arg as u8;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (1 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -3516,6 +3769,8 @@ pub fn execute_unprefixed0xe8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let b = arg as u8 as i8 as i16 as u16;
     let (r, h, c) = alu::add16l(a, b);
     cpu.sp = r;
+
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | (0 << 7);
 }
 
 #[allow(unused_variables)]
@@ -3546,8 +3801,9 @@ pub fn execute_unprefixed0xed(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xee(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a ^= arg as u8;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -3558,15 +3814,13 @@ pub fn execute_unprefixed0xef(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf0(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xF0");
+    cpu.a = mmu.read(arg + 0xff00);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf1(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    cpu.sp += 2;
-    write_af(cpu, mmu.read16(cpu.sp));
-
-    let z = 0; // todo
+    let v = pop(cpu, mmu);
+    write_af(cpu, v);
 }
 
 #[allow(unused_variables)]
@@ -3576,7 +3830,7 @@ pub fn execute_unprefixed0xf2(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf3(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xF3");
+    cpu.interrupt_master_enable = false;
 }
 
 #[allow(unused_variables)]
@@ -3586,15 +3840,16 @@ pub fn execute_unprefixed0xf4(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf5(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    mmu.write16(cpu.sp, read_af(cpu));
-    cpu.sp -= 2;
+    let v = read_af(cpu);
+    push(cpu, mmu, v);
 }
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xf6(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     cpu.a |= arg as u8;
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = (0 << 4) | (0 << 5) | (0 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]
@@ -3607,6 +3862,8 @@ pub fn execute_unprefixed0xf7(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 pub fn execute_unprefixed0xf8(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
     let (r, h, c) = alu::add16l(cpu.sp, arg as u8 as i8 as i16 as u16);
     write_hl(cpu, r);
+
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (0 << 6) | (0 << 7);
 }
 
 #[allow(unused_variables)]
@@ -3621,7 +3878,7 @@ pub fn execute_unprefixed0xfa(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xfb(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xFB");
+    cpu.interrupt_master_enable = true;
 }
 
 #[allow(unused_variables)]
@@ -3636,9 +3893,10 @@ pub fn execute_unprefixed0xfd(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
 
 #[allow(unused_variables)]
 pub fn execute_unprefixed0xfe(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16) {
-    panic!("invalid opcode 0xFE");
+    let (r, h, c) = alu::sub(cpu.a, arg as u8, false);
+    let z = cpu.a == 0;
 
-    let z = 0; // todo
+    cpu.f = ((c as u8) << 4) | ((h as u8) << 5) | (1 << 6) | ((z as u8) << 7);
 }
 
 #[allow(unused_variables)]

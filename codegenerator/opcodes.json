@@ -738,6 +738,7 @@
 				{
 					"name": "HL",
 					"add": "+1",
+					"sign": "+",
 					"immediate": false
 				},
 				{
@@ -917,6 +918,7 @@
 				{
 					"name": "HL",
 					"add": "+1",
+					"sign": "+",
 					"immediate": false
 				}
 			],
@@ -1089,6 +1091,7 @@
 				{
 					"name": "HL",
 					"add": "-1",
+					"sign": "-",
 					"immediate": false
 				},
 				{
@@ -1268,6 +1271,7 @@
 				{
 					"name": "HL",
 					"add": "-1",
+					"sign": "-",
 					"immediate": false
 				}
 			],
@@ -4957,7 +4961,7 @@
 			}
 		},
 		"0xE0": {
-			"mnemonic": "LDH",
+			"mnemonic": "LD",
 			"bytes": 2,
 			"cycles": [
 				12
@@ -5263,7 +5267,7 @@
 			}
 		},
 		"0xF0": {
-			"mnemonic": "LDH",
+			"mnemonic": "LD",
 			"bytes": 2,
 			"cycles": [
 				12
@@ -5301,10 +5305,10 @@
 			],
 			"immediate": true,
 			"flags": {
-				"Z": "Z",
-				"N": "N",
-				"H": "H",
-				"C": "C"
+				"Z": "-",
+				"N": "-",
+				"H": "-",
+				"C": "-"
 			}
 		},
 		"0xF2": {

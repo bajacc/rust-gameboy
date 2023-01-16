@@ -22,6 +22,9 @@
     {%- else -%}
         {{o.name}}
     {%- endif -%}
+    {%- if o.sign -%}
+    {{o.sign}}
+    {%- endif -%}
     {%- if not o.immediate -%}
     )
     {%- endif -%}
@@ -36,11 +39,11 @@
     {%- endif -%}
     
     {%- if o.name in ["d8", "a8"] -%}
-        {{vec}}[{{pos}} + 1]
+        mmu.read({{pos}} + 1)
     {%- elif o.name in ["d16", "a16"] -%}
-        ({{vec}}[{{pos}} + 1] as u16) | (({{vec}}[{{pos}} + 2] as u16) << 8)
+        mmu.read16({{pos}} + 1)
     {%- elif o.name == "r8" -%}
-        {{vec}}[{{pos}} + 1] as i8
+        mmu.read({{pos}} + 1) as i8
     {%- endif -%}
 {%- endfor -%}
 {%- endmacro opcodeParameter -%}
@@ -105,18 +108,20 @@
         {%- set shift = 4 + loop.index0 -%}
         (
         {%- if value == "C" -%}
-        c
+        (c as u8) << {{shift}}
         {%- elif value == "Z" -%}
-        (z as u8)
+        (z as u8) << {{shift}}
+        {%- elif value == "H" -%}
+        (h as u8) << {{shift}}
+        {%- elif value == "N" -%}
+        (n as u8) << {{shift}}
         {%- elif value == "-" -%}
-        ((cpu.f >> {{7 - loop.index0}}) & 1)
+        cpu.f & (1 << {{shift}})
         {%- elif value == "1" -%}
-        1
+        1 << {{shift}}
         {%- elif value == "0" -%}
-        0
+        0 << {{shift}}
         {%- endif -%}
-        
-        << {{shift}}
         )
         {%- if not loop.last -%}
         |
