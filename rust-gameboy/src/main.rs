@@ -1,3 +1,4 @@
+mod alu;
 mod cpu;
 mod desassembler;
 mod gb;
@@ -7,12 +8,8 @@ mod opcodes;
 mod opcodes_const;
 mod timer;
 
-use desassembler::disassemble;
-
-use cpu::Cpu;
 use gb::GameBoy;
 use mbc::Mbc;
-use mmu::Mmu;
 
 use std::env;
 use std::fs::File;
@@ -35,9 +32,12 @@ fn main() {
     let mbc = Mbc::new(arr);
     let mut gb = GameBoy::new(mbc);
 
+    gb.mmu.disable_boot_rom = true;
+    gb.cpu.pc = 0x100;
+
     gb.disassemble(10);
 
-    while !gb.cpu.halt {
+    loop {
         print!(">>> ");
         io::stdout().flush().unwrap();
         let mut s = String::new();
@@ -53,7 +53,7 @@ fn main() {
                 println!();
             }
             "ss" => {
-                for _ in 0..100 {
+                for _ in 0..100000 {
                     gb.step();
                 }
                 gb.disassemble(10);
@@ -62,13 +62,33 @@ fn main() {
                 }
                 println!();
             }
-            "r" => {
-                while !gb.cpu.halt {
+            "l" => {
+                let pc = gb.cpu.pc;
+                gb.step();
+                while pc != gb.cpu.pc {
                     gb.step();
                 }
+                gb.disassemble(10);
+                for i in 0..16 {
+                    print!("{:02x} ", gb.mmu.read(0xffff - i));
+                }
+                gb.cpu.print();
             }
+            "f" => {
+                while gb.mmu.read(gb.cpu.pc) != 0xfb {
+                    gb.cycle();
+                }
+                gb.disassemble(10);
+                for i in 0..16 {
+                    print!("{:02x} ", gb.mmu.read(0xffff - i));
+                }
+                gb.cpu.print();
+            }
+            "r" => loop {
+                gb.cycle();
+            },
             "c" => gb.cpu.print(),
-            "p" => gb.disassemble(10),
+            "p" => gb.disassemble(30),
             _ => println!("command {} not found", s.trim()),
         }
     }

@@ -5,10 +5,17 @@ pub struct Timer {
     pub tima: u8,
     pub tma: u8,
     pub tac: u8,
-    pub state: bool,
+    state: bool,
+    interupt: Interupt,
 }
 
 const BIT_IN_DIV: [u8; 4] = [9, 3, 5, 7];
+
+macro_rules! bit {
+    ($x:expr, $pos:expr) => {
+        ($x & (1 << $pos)) != 0
+    };
+}
 
 impl Timer {
     pub fn new() -> Self {
@@ -18,7 +25,14 @@ impl Timer {
             tma: 0,
             tac: 0,
             state: false,
+            interupt: Interupt::None,
         }
+    }
+
+    pub fn extract_interupt(&mut self) -> u8 {
+        let r = self.interupt as u8;
+        self.interupt = Interupt::None;
+        return r;
     }
 
     pub fn read(&self, addr: u16) -> u8 {
@@ -33,28 +47,36 @@ impl Timer {
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
-            0xff04 => self.div = 0,
+            0xff04 => {
+                self.div = 0;
+                self.inc_if_change()
+            }
             0xff05 => self.tima = value,
             0xff06 => self.tma = value,
-            0xff07 => self.tac = value,
+            0xff07 => {
+                self.tac = value & 0x7;
+                self.inc_if_change()
+            }
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
         }
     }
 
-    pub fn cycle(&mut self) -> Interupt {
-        self.div = self.div.wrapping_add(4);
-        let mut curr_state = (self.tac >> 3) & 1 == 1;
-        curr_state &= (self.div >> BIT_IN_DIV[(self.tac & 0x3) as usize]) & 1 == 1;
+    fn inc_if_change(&mut self) {
+        let curr_state = bit!(self.tac, 2) & bit!(self.div, BIT_IN_DIV[(self.tac & 0x3) as usize]);
 
         if self.state && !curr_state {
             if self.tima == 0xff {
                 self.tima = self.tma;
-                return Interupt::Timer;
+                self.interupt = Interupt::Timer;
             } else {
                 self.tima += 1;
             }
         }
         self.state = curr_state;
-        return Interupt::None;
+    }
+
+    pub fn cycle(&mut self) {
+        self.div = self.div.wrapping_add(4);
+        self.inc_if_change();
     }
 }

@@ -1,6 +1,6 @@
 use crate::mmu::Mmu;
 use crate::opcodes;
-use crate::opcodes_const::{OPCODE_BYTES_LEN, OPCODE_DURATION};
+use crate::opcodes_const;
 
 pub struct Cpu {
     pub a: u8,
@@ -19,8 +19,11 @@ pub struct Cpu {
     num_idle_cycle: usize,
 }
 
+#[derive(Copy, Clone)]
 pub enum Interupt {
     None = 0,
+    Mask = (1 << 5) - 1,
+
     Vblank = 1 << 0,
     LcdStats = 1 << 1,
     Timer = 1 << 2,
@@ -73,21 +76,20 @@ impl Cpu {
     fn handle_interupt(&mut self, mmu: &mut Mmu, mut interupts: u8) {
         self.interrupt_master_enable = false;
         let mut id_interupt = 0;
-        while interupts & 1 != 0 {
+        while interupts & 1 == 0 {
             id_interupt += 1;
             interupts >>= 1;
         }
+        mmu.interupt_flag &= !(1 << id_interupt);
         opcodes::push(self, mmu, self.pc);
         self.pc = 0x40 + id_interupt * 8;
     }
 
     pub fn cycle(&mut self, mmu: &mut Mmu) {
-        if self.num_idle_cycle > 0 {
-            self.num_idle_cycle -= 1;
-            return;
+        if self.num_idle_cycle == 0 {
+            self.num_idle_cycle = self.step(mmu);
         }
-
-        self.num_idle_cycle = self.step(mmu);
+        self.num_idle_cycle -= 1;
     }
 
     pub fn step(&mut self, mmu: &mut Mmu) -> usize {
@@ -98,74 +100,26 @@ impl Cpu {
             }
             self.halt = false;
         }
+
         if self.interrupt_master_enable && interupts != 0 {
             self.handle_interupt(mmu, interupts);
             return 5;
         }
 
         let opcode = mmu.read(self.pc);
-        let len = OPCODE_BYTES_LEN[opcode as usize] as u16;
+        let len = opcodes_const::OPCODE_BYTES_LEN[opcode as usize] as u16;
         let arg = match len {
             2 => mmu.read(self.pc + 1) as u16,
             3 => mmu.read16(self.pc + 1),
             _ => 0,
         };
+        let duration = opcodes::duration_opcode(opcode, arg, self.f);
+
         self.pc += len;
         match opcode {
             0xcb => opcodes::execute_prefixed(self, mmu, arg as u8),
             _ => opcodes::execute_unprefixed(self, mmu, opcode, arg),
         };
-        return OPCODE_DURATION[opcode as usize];
-    }
-}
-
-pub mod alu {
-
-    fn carry(a: i32, b: i32, c: i32, mask: i32) -> bool {
-        return (a & mask) + (b & mask) + (c & mask) > mask;
-    }
-
-    fn borrow(a: i32, b: i32, c: i32, mask: i32) -> bool {
-        return (a & mask) - (b & mask) - (c & mask) < 0;
-    }
-
-    pub fn add(_a: u8, _b: u8, _c: bool) -> (u8, bool, bool) {
-        let (a, b, c) = (_a as i32, _b as i32, _c as i32);
-        let r = a + b + c;
-        let h = carry(a, b, c, 0xf);
-        let newc = carry(a, b, c, 0xff);
-        return ((r & 0xff) as u8, h, newc);
-    }
-
-    pub fn sub(_a: u8, _b: u8, _c: bool) -> (u8, bool, bool) {
-        let (a, b, c) = (_a as i32, _b as i32, _c as i32);
-        let r = a - b - c;
-        let h = borrow(a, b, c, 0xf);
-        let newc = borrow(a, b, c, 0xff);
-        return ((r & 0xff) as u8, h, newc);
-    }
-
-    pub fn add16h(_a: u16, _b: u16) -> (u16, bool, bool) {
-        let (a, b) = (_a as i32, _b as i32);
-        let r = a + b;
-        let h = carry(a, b, 0, 0xfff);
-        let newc = carry(a, b, 0, 0xffff);
-        return ((r & 0xffff) as u16, h, newc);
-    }
-
-    pub fn add16l(_a: u16, _b: u16) -> (u16, bool, bool) {
-        let (a, b) = (_a as i32, _b as i32);
-        let r = a + b;
-        let h = carry(a, b, 0, 0xf);
-        let newc = carry(a, b, 0, 0xff);
-        return ((r & 0xffff) as u16, h, newc);
-    }
-
-    pub fn bcd_adjust(v: u8, n: bool, h: bool, c: bool) -> (u8, bool) {
-        let fix_l = h | (!n & ((v & 0xf) > 0x9));
-        let fix_h = c | (!n & (v > 0x99));
-        let fix: u8 = if fix_h { 0x60 } else { 0 } + if fix_l { 0x6 } else { 0 };
-        let va: u8 = if n { v - fix } else { v + fix };
-        return (va, fix_h);
+        return duration;
     }
 }

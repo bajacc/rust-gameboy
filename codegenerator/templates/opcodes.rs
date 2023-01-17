@@ -2,7 +2,8 @@
 
 use crate::cpu::Cpu;
 use crate::mmu::Mmu;
-use crate::cpu::alu;
+use crate::alu;
+use crate::opcodes_const::{DURATION_PREFIXED, DURATION_UNPREFIXED};
 
 pub fn push(cpu: &mut Cpu, mmu: &mut Mmu, v: u16) {
     cpu.sp -= 2;
@@ -23,7 +24,11 @@ pub fn read_{{r16}}(cpu: &mut Cpu) -> u16 {
 
 pub fn write_{{r16}}(cpu: &mut Cpu, v: u16) {
     cpu.{{arr[1]}} = (v >> 8) as u8;
-    cpu.{{arr[2]}} = (v & 0xff) as u8;
+    {%- if arr[2] == "f" -%}
+        cpu.{{arr[2]}} = (v & 0xf0) as u8;
+    {% else %}
+        cpu.{{arr[2]}} = (v & 0xff) as u8;
+    {% endif %}
 }
 {% endfor %}
 
@@ -33,6 +38,21 @@ pub fn flag_{{f}}(cpu: &mut Cpu) -> bool {
 }
 {% endfor %}
 
+pub fn duration_opcode(opcode: u8, arg: u16, flag: u8) -> usize {
+    if opcode == 0xcb {
+        return DURATION_PREFIXED[arg as usize]
+    }
+
+    match opcode {
+    {% for hex, i in unprefixed -%}
+    {%- if i.cycles | length == 2 -%}
+        {{hex}} if {{macros::jmpcond(operand=i.operands[0], flag="flag")}} => {{i.cycles[0] / 4}},
+    {% endif -%}
+    {%- endfor %}
+    _ => DURATION_UNPREFIXED[opcode as usize]
+    }
+}
+
 
 {% for hex, i in cbprefixed %}
 #[allow(unused_variables)]
@@ -40,7 +60,9 @@ pub fn execute_prefixed{{hex | lower}}(cpu: &mut Cpu, mmu: &mut Mmu) {
 
     {% set operand = i.operands | last %}
 
+    {%- if i.mnemonic != "BIT" -%}
     let mut v = {{macros::load(operand=operand)}};
+    {%- endif -%}
 
     {%- if i.mnemonic == "RLC" -%}
     let c = v >> 7;
@@ -80,16 +102,16 @@ pub fn execute_prefixed{{hex | lower}}(cpu: &mut Cpu, mmu: &mut Mmu) {
     v = (v >> 4) | (v << 4);
 
     {%- elif i.mnemonic == "BIT" -%}
-    let z = (v & (1 << {{i.operands[0].name}})) != 0;
+    let z = ({{macros::load(operand=operand)}} & (1 << {{i.operands[0].name}})) == 0; // todo
     {% else %}
     panic!("invalid prefixed opcode {{hex}}");
-
     {%- endif -%}
 
-    {{macros::write(operand=operand, value="v")}}
+    
 
     {%- if i.mnemonic != "BIT" -%}
     let z = v == 0;
+    {{macros::write(operand=operand, value="v")}}
     {%- endif -%}
 
     {# update flag register #}
@@ -147,16 +169,17 @@ pub fn execute_unprefixed{{hex | lower}}(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16)
         {%- set opright = i.operands | last -%}
         {% set b = macros::load(operand=opright) %};
         let (r, h, c) = alu::sub(cpu.a, {{b}}, false);
+        let z = r == 0;
 
     {%- elif i.mnemonic in ["INC", "DEC"] -%}
         {%- set operand = i.operands[0] -%}
         let mut r = {{macros::load(operand=i.operands[0])}};
         {%- if i.mnemonic == "DEC" -%}
-            let h = 0;
-            r -= 1;
+            let h = r & 0xf == 0;
+            r = r.wrapping_sub(1);
         {%- else -%}
             let h = r & 0xf == 0xf;
-            r += 1;
+            r = r.wrapping_add(1);
         {%- endif -%}
         let z = r == 0;
         {{macros::write(operand=i.operands[0], value="r")}}
@@ -269,11 +292,10 @@ pub fn execute_unprefixed{{hex | lower}}(cpu: &mut Cpu, mmu: &mut Mmu, arg: u16)
     {% endif %}
     
     {%- if i.flags.Z == "Z" -%}
-        {%- if i.mnemonic not in ["INC", "DEC"] -%}
+        {%- if i.mnemonic not in ["INC", "DEC", "CP"] -%}
         let z = cpu.a == 0;
         {%- endif -%}
     {%- endif -%}
-
     {# update flag register #}
     {{macros::updateFlag(flags=i.flags)}}
 }

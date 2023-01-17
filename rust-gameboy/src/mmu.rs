@@ -1,5 +1,9 @@
+use crate::cpu::Interupt;
 use crate::mbc::Mbc;
 use crate::timer::Timer;
+
+use std::io;
+use std::io::Write;
 
 const BOOT_ROM: [u8; 256] = [
     0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
@@ -85,11 +89,14 @@ impl Mmu {
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80] = value,
 
             0xff04..=0xff07 => self.timer.write(addr, value),
-            0xff01 => print!("{}", value as char),
+            0xff01 => {
+                print!("{}", value as char);
+                io::stdout().flush().unwrap();
+            }
 
-            0xff0f => self.interupt_flag = value,
+            0xff0f => self.interupt_flag = value & (Interupt::Mask as u8),
             0xff50 => self.disable_boot_rom = true,
-            0xffff => self.interupt_enable = value,
+            0xffff => self.interupt_enable = value & (Interupt::Mask as u8),
             _ => (),
         }
     }
@@ -108,6 +115,7 @@ impl Mmu {
     }
 
     pub fn cycle(&mut self) {
-        self.interupt_flag |= self.timer.cycle() as u8;
+        self.timer.cycle();
+        self.interupt_flag |= self.timer.extract_interupt();
     }
 }

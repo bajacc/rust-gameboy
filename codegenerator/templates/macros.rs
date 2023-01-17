@@ -71,7 +71,12 @@
     {%- elif r == "r8" -%}
     arg as u8 as i8 as i16 as u16
     {%- elif r in ["A","B","C","D","E","H","L","SP","PC"] -%}
-    cpu.{{r | lower}}
+        {%- if operand.immediate -%}
+            cpu.{{r | lower}}
+        {%- else -%}
+            mmu.read(cpu.{{r | lower}} as u16 + 0xff00)
+        {%- endif -%}
+    
     {%- else -%}
     ------- {# make the compilation fail #}
     {%- endif -%}
@@ -95,7 +100,11 @@
             mmu.write(arg, {{value}});
         {%- endif -%}
     {%- elif r in ["A","B","C","D","E","H","L","SP","PC"] -%}
-    cpu.{{r | lower}} = {{value}};
+        {%- if operand.immediate -%}
+            cpu.{{r | lower}} = {{value}};
+        {%- else -%}
+            mmu.write(cpu.{{r | lower}} as u16 + 0xff00, {{value}})
+        {%- endif -%}
     {%- else -%}
     ------- {# make the compilation fail #}
     {%- endif -%}
@@ -131,15 +140,15 @@
 {% endif %}
 {%- endmacro updateFlag -%}
 
-{%- macro jmpcond(operand) -%}
-{% if operand.name == "NZ" %}
-!flag_z(cpu)
-{% elif operand.name == "Z" %}
-flag_z(cpu)
-{% elif operand.name == "NC" %}
-!flag_c(cpu)
-{% elif operand.name == "C" %}
-flag_c(cpu)
-{% endif %}
+{%- macro jmpcond(operand, flag="cpu.f") -%}
+{%- if operand.name == "NZ" -%}
+({{flag}} & (1 << 7)) == 0
+{%- elif operand.name == "Z" -%}
+({{flag}} & (1 << 7)) != 0
+{%- elif operand.name == "NC" -%}
+({{flag}} & (1 << 4)) == 0
+{%- elif operand.name == "C" -%}
+({{flag}} & (1 << 4)) != 0
+{%- endif -%}
 {%- endmacro jmpcond -%}
 

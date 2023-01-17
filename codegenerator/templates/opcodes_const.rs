@@ -7,8 +7,14 @@ pub const OPCODE_BYTES_LEN: [usize; 256] = [
 {% endfor %}
 ];
 
-pub const OPCODE_DURATION: [usize; 256] = [
+pub const DURATION_UNPREFIXED: [usize; 256] = [
 {% for hex, i in unprefixed -%}
-    {{i.cycles | last}},
+    {{i.cycles | last / 4}},
+{%- endfor %}
+];
+
+pub const DURATION_PREFIXED: [usize; 256] = [
+{% for hex, i in cbprefixed -%}
+    {{i.cycles | last / 4}},
 {%- endfor %}
 ];
