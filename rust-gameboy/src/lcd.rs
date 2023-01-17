@@ -1,3 +1,5 @@
+use crate::mmu::Mmu;
+
 pub struct Lcd {
     pub lcdc: u8,
     pub stat: u8,
@@ -5,7 +7,6 @@ pub struct Lcd {
     pub scx: u8,
     pub ly: u8,
     pub lyc: u8,
-    pub dma: u8,
     pub bgp: u8,
     pub obp0: u8,
     pub obp1: u8,
@@ -22,7 +23,6 @@ impl Lcd {
             scx: 0,
             ly: 0,
             lyc: 0,
-            dma: 0,
             bgp: 0,
             obp0: 0,
             obp1: 0,
@@ -39,7 +39,6 @@ impl Lcd {
             0xFF43 => self.scx,
             0xFF44 => self.ly,
             0xFF45 => self.lyc,
-            0xFF46 => self.dma,
             0xFF47 => self.bgp,
             0xFF48 => self.obp0,
             0xFF49 => self.obp1,
@@ -57,7 +56,6 @@ impl Lcd {
             0xFF43 => self.scx = value,
             0xFF44 => (), // ly
             0xFF45 => self.lyc = value,
-            0xFF46 => self.dma = value,
             0xFF47 => self.bgp = value,
             0xFF48 => self.obp0 = value,
             0xFF49 => self.obp1 = value,
@@ -65,5 +63,9 @@ impl Lcd {
             0xFF4B => self.wy = value,
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
         }
+    }
+
+    pub fn cycle(&self, mmu: &mut Mmu) {
+        mmu.write(0xfffe, 1);
     }
 }

@@ -3,6 +3,7 @@ use crate::lcd::Lcd;
 use crate::mbc::Mbc;
 use crate::timer::Timer;
 
+use std::borrow::BorrowMut;
 use std::io;
 use std::io::Write;
 
@@ -71,16 +72,21 @@ impl Mmu {
             0x0100..=0x7fff => self.mbc.read(addr),
             0x8000..=0x9fff => self.video_ram[addr as usize - 0x8000],
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000],
+            0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000],
             0xfe00..=0xfe9f => self.graphical_ram[addr as usize - 0xfe00],
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80],
 
+            0xff01 => NO_DATA, // stdout
+            0xff46 => NO_DATA, // dma
             0xff04..=0xff07 => self.timer.read(addr),
-            0xff40..=0xff4b => self.lcd.read(addr),
-            0xff01 => NO_DATA,
+            0xff40..=0xff45 | 0xff47..=0xff4b => self.lcd.read(addr),
 
             0xff0f => self.interupt_flag,
             0xffff => self.interupt_enable,
-            _ => NO_DATA,
+            _ => {
+                println!("read {:04x}", addr);
+                NO_DATA
+            }
         }
     }
 
@@ -89,20 +95,29 @@ impl Mmu {
             0x0000..=0x7fff => self.mbc.write(addr, value),
             0x8000..=0x9fff => self.video_ram[addr as usize - 0x8000] = value,
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000] = value,
+            0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000] = value,
             0xfe00..=0xfe9f => self.graphical_ram[addr as usize - 0xfe00] = value,
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80] = value,
 
-            0xff04..=0xff07 => self.timer.write(addr, value),
-            0xff40..=0xff4b => self.lcd.write(addr, value),
             0xff01 => {
                 print!("{}", value as char);
                 io::stdout().flush().unwrap();
             }
+            0xff46 => {
+                // DMA
+                // todo: make the dma transfer take 1 cycle per copy
+                let source: u16 = (value as u16) << 8;
+                for i in 0..0xa0 {
+                    self.graphical_ram[i] = self.read(source + (i as u16));
+                }
+            }
+            0xff04..=0xff07 => self.timer.write(addr, value),
+            0xff40..=0xff45 | 0xff47..=0xff4b => self.lcd.write(addr, value),
 
             0xff0f => self.interupt_flag = value & (Interupt::Mask as u8),
             0xff50 => self.disable_boot_rom = true,
             0xffff => self.interupt_enable = value & (Interupt::Mask as u8),
-            _ => (),
+            _ => println!("write {:04x} {:02x}", addr, value),
         }
     }
 
@@ -122,5 +137,6 @@ impl Mmu {
     pub fn cycle(&mut self) {
         self.timer.cycle();
         self.interupt_flag |= self.timer.extract_interupt();
+        let lcd = &self.lcd;
     }
 }

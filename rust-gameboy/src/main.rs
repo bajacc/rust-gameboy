@@ -33,8 +33,8 @@ fn main() {
     let mbc = Mbc::new(arr);
     let mut gb = GameBoy::new(mbc);
 
-    gb.mmu.disable_boot_rom = true;
-    gb.cpu.pc = 0x100;
+    // gb.mmu.disable_boot_rom = true;
+    // gb.cpu.pc = 0x100;
 
     gb.disassemble(10);
 
@@ -76,7 +76,7 @@ fn main() {
                 gb.cpu.print();
             }
             "f" => {
-                while gb.mmu.read(gb.cpu.pc) != 0xfb {
+                while gb.cpu.pc != 0x100 {
                     gb.cycle();
                 }
                 gb.disassemble(10);
