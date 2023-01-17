@@ -1,4 +1,5 @@
 use crate::cpu::Interupt;
+use crate::lcd::Lcd;
 use crate::mbc::Mbc;
 use crate::timer::Timer;
 
@@ -39,6 +40,7 @@ pub struct Mmu {
     pub high_ram: [u8; 0x7f],
 
     timer: Timer,
+    lcd: Lcd,
 }
 
 impl Mmu {
@@ -53,6 +55,7 @@ impl Mmu {
             graphical_ram: [0; 0xa0],
             high_ram: [0; 0x7f],
             timer: Timer::new(),
+            lcd: Lcd::new(),
         }
     }
 
@@ -72,6 +75,7 @@ impl Mmu {
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80],
 
             0xff04..=0xff07 => self.timer.read(addr),
+            0xff40..=0xff4b => self.lcd.read(addr),
             0xff01 => NO_DATA,
 
             0xff0f => self.interupt_flag,
@@ -89,6 +93,7 @@ impl Mmu {
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80] = value,
 
             0xff04..=0xff07 => self.timer.write(addr, value),
+            0xff40..=0xff4b => self.lcd.write(addr, value),
             0xff01 => {
                 print!("{}", value as char);
                 io::stdout().flush().unwrap();

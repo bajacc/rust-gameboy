@@ -2,6 +2,7 @@ mod alu;
 mod cpu;
 mod desassembler;
 mod gb;
+mod lcd;
 mod mbc;
 mod mmu;
 mod opcodes;
