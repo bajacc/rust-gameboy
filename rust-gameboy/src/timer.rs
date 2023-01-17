@@ -1,5 +1,14 @@
 use crate::cpu::Interupt;
 
+#[macro_export]
+macro_rules! bit {
+    ($x:expr, $pos:expr) => {
+        ($x & (1 << $pos)) != 0
+    };
+}
+
+const BIT_IN_DIV: [u8; 4] = [9, 3, 5, 7];
+
 pub struct Timer {
     pub div: u16,
     pub tima: u8,
@@ -7,14 +16,6 @@ pub struct Timer {
     pub tac: u8,
     state: bool,
     interupt: Interupt,
-}
-
-const BIT_IN_DIV: [u8; 4] = [9, 3, 5, 7];
-
-macro_rules! bit {
-    ($x:expr, $pos:expr) => {
-        ($x & (1 << $pos)) != 0
-    };
 }
 
 impl Timer {

@@ -111,7 +111,7 @@
 {%- endmacro write -%}
 
 {%- macro updateFlag(flags) -%}
-{% if flags.Z != "-" or flags.N != "-" or flags.H != "-" or flags.C != "-" %}
+{%- if flags.Z != "-" or flags.N != "-" or flags.H != "-" or flags.C != "-" -%}
     cpu.f = 
     {%- for flag, value in flags -%}
         {%- set shift = 4 + loop.index0 -%}
@@ -137,7 +137,7 @@
         {%- endif %}
     {%- endfor -%};
 
-{% endif %}
+{%- endif -%}
 {%- endmacro updateFlag -%}
 
 {%- macro jmpcond(operand, flag="cpu.f") -%}
