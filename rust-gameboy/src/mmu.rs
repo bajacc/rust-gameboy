@@ -35,13 +35,12 @@ pub struct Mmu {
     pub disable_boot_rom: bool,
     pub mbc: Mbc,
 
-    pub video_ram: [u8; 0x2000],
     pub work_ram: [u8; 0x2000],
     pub graphical_ram: [u8; 0xa0],
     pub high_ram: [u8; 0x7f],
 
-    timer: Timer,
-    lcd: Lcd,
+    pub timer: Timer,
+    pub lcd: Lcd,
 }
 
 impl Mmu {
@@ -51,7 +50,6 @@ impl Mmu {
             interupt_flag: 0,
             disable_boot_rom: false,
             mbc: mbc,
-            video_ram: [0; 0x2000],
             work_ram: [0; 0x2000],
             graphical_ram: [0; 0xa0],
             high_ram: [0; 0x7f],
@@ -70,7 +68,7 @@ impl Mmu {
                 }
             }
             0x0100..=0x7fff => self.mbc.read(addr),
-            0x8000..=0x9fff => self.video_ram[addr as usize - 0x8000],
+            0x8000..=0x9fff => self.lcd.read(addr),
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000],
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000],
             0xfe00..=0xfe9f => self.graphical_ram[addr as usize - 0xfe00],
@@ -83,17 +81,14 @@ impl Mmu {
 
             0xff0f => self.interupt_flag,
             0xffff => self.interupt_enable,
-            _ => {
-                println!("read {:04x}", addr);
-                NO_DATA
-            }
+            _ => NO_DATA,
         }
     }
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
             0x0000..=0x7fff => self.mbc.write(addr, value),
-            0x8000..=0x9fff => self.video_ram[addr as usize - 0x8000] = value,
+            0x8000..=0x9fff => self.lcd.write(addr, value),
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000] = value,
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000] = value,
             0xfe00..=0xfe9f => self.graphical_ram[addr as usize - 0xfe00] = value,
@@ -117,7 +112,7 @@ impl Mmu {
             0xff0f => self.interupt_flag = value & (Interupt::Mask as u8),
             0xff50 => self.disable_boot_rom = true,
             0xffff => self.interupt_enable = value & (Interupt::Mask as u8),
-            _ => println!("write {:04x} {:02x}", addr, value),
+            _ => (),
         }
     }
 
@@ -136,7 +131,8 @@ impl Mmu {
 
     pub fn cycle(&mut self) {
         self.timer.cycle();
+        self.lcd.cycle();
         self.interupt_flag |= self.timer.extract_interupt();
-        let lcd = &self.lcd;
+        self.interupt_flag |= self.lcd.extract_interupt();
     }
 }
