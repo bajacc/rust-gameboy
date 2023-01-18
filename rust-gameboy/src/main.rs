@@ -20,6 +20,7 @@ use std::io::BufReader;
 use std::io::Read;
 use std::io::Write;
 
+use crate::lcd::Lcd;
 use crate::renderer::Renderer;
 
 fn main() {
@@ -39,6 +40,7 @@ fn main() {
     let mut renderer = Renderer::new(192, 128);
     let mut bg_renderer = Renderer::new(256, 256);
     let mut bg_renderer2 = Renderer::new(256, 256);
+    let mut gb_renderer = Renderer::new(Lcd::HEIGHT as usize * 2, Lcd::WIDTH as usize * 2);
 
     gb.disassemble(10);
 
@@ -58,6 +60,7 @@ fn main() {
         renderer.render(&buffer);
         bg_renderer.render(&bg_buffer);
         bg_renderer2.render(&bg_buffer2);
+        gb_renderer.render_u8(&gb.mmu.lcd.display);
 
         match s.trim() {
             "s" => {
@@ -108,6 +111,7 @@ fn main() {
                 renderer.render(&buffer);
                 bg_renderer.render(&bg_buffer);
                 bg_renderer2.render(&bg_buffer2);
+                gb_renderer.render_u8(&gb.mmu.lcd.display);
                 for _ in 0..100000 {
                     gb.cycle();
                 }

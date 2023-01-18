@@ -28,4 +28,19 @@ impl Renderer {
             .update_with_buffer(&buffer, self.width, self.height)
             .unwrap();
     }
+
+    const COLOR: [u32; 4] = [0, 90, 180, 255];
+
+    pub fn render_u8(&mut self, buffer: &[u8]) {
+        let mut b = vec![0; self.height * self.width];
+        for y in 0..self.height {
+            for x in 0..self.width {
+                b[y * self.width + x] =
+                    Renderer::COLOR[buffer[(y / 2) * (self.width / 2) + (x / 2)] as usize];
+            }
+        }
+        self.window
+            .update_with_buffer(&b, self.width, self.height)
+            .unwrap();
+    }
 }

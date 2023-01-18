@@ -1,3 +1,6 @@
+use core::num;
+use std::cmp::Ordering;
+
 use crate::cpu::Interupt;
 use crate::mmu;
 
@@ -18,8 +21,21 @@ pub struct Lcd {
 
     num_idle_cycle: usize,
     interupt: u8,
+    window_line: u8,
 
     pub display: [u8; Lcd::NUM_PIXELS],
+}
+
+struct Sprite {
+    pub y: u8,
+    pub x: u8,
+    pub idx_tile: u8,
+    pub palette: bool,
+    pub flip_h: bool,
+    pub flip_v: bool,
+    pub behind_bg: bool,
+
+    pub idx_sprite: u8,
 }
 
 pub enum LcdcBit {
@@ -56,6 +72,10 @@ macro_rules! bit {
     };
 }
 
+fn apply_palette(palette: u8, color: u8) -> u8 {
+    return (palette >> (color * 2)) & 0x3;
+}
+
 impl Lcd {
     pub const HEIGHT: u8 = 144;
     pub const WIDTH: u8 = 160;
@@ -78,6 +98,7 @@ impl Lcd {
             wy: 0,
             num_idle_cycle: 0,
             interupt: 0,
+            window_line: 0,
             display: [0; Lcd::NUM_PIXELS],
         }
     }
@@ -111,6 +132,7 @@ impl Lcd {
                 if !bit!(self.lcdc, LcdcBit::LcdStatus) {
                     // switch off lcd
                     self.ly = 0; // todo interupts?
+                    self.window_line = 0;
                     for pixel in self.display.iter_mut() {
                         *pixel = 0;
                     }
@@ -138,7 +160,7 @@ impl Lcd {
         }
     }
 
-    fn get_pixel(&self, y: usize, x: usize, tile_index_addr: usize) -> u8 {
+    fn get_pixel_bg(&self, y: usize, x: usize, tile_index_addr: usize) -> u8 {
         let tile_num = (y / 8) * 32 + (x / 8);
         let mut tile_addr = self.video_ram[tile_index_addr + tile_num] as usize;
         if !bit!(self.lcdc, LcdcBit::TileSource) {
@@ -149,62 +171,131 @@ impl Lcd {
         let bit_pos = 7 - (x % 8);
         let lsb = (lsb_byte >> bit_pos) & 1;
         let msb = (msb_byte >> bit_pos) & 1;
-        return msb * 2 + lsb;
+        return apply_palette(self.bgp, msb * 2 + lsb);
     }
 
-    const OBJ_SIZE_Y: [i16; 2] = [8, 16];
+    const OBJ_SIZE_Y: [isize; 2] = [8, 16];
 
-    fn get_sprite_pixel(&self, bg: &mut [u8], fg: &mut [u8], y: i16) {
+    fn get_sprite_on_line(&self, y: isize) -> Vec<Sprite> {
+        let mut sprites = Vec::new();
         let mut counter = 0;
-        for id_sprite in 0..40 {
-            let sprite_y = self.oam_ram[id_sprite * 4] as i16 - 16;
-            let sprite_x = self.oam_ram[id_sprite * 4 + 1] as i16 - 8;
-            let tile_addr = self.oam_ram[id_sprite * 4 + 2] as usize;
-            let sprite_bits = self.oam_ram[id_sprite * 4 + 3];
-            if !(y >= sprite_y
-                && y < sprite_y + Lcd::OBJ_SIZE_Y[bit!(self.lcdc, LcdcBit::ObjSize) as usize])
-            {
+        let obj_size = Lcd::OBJ_SIZE_Y[bit!(self.lcdc, LcdcBit::ObjSize) as usize];
+        for idx_sprite in 0..40 {
+            let sprite_y = self.oam_ram[idx_sprite * 4] as isize - 16;
+            if !(sprite_y <= y && y < sprite_y + obj_size) {
                 continue;
             }
+
+            let sprite_bits = self.oam_ram[idx_sprite * 4 + 3];
+            sprites.push(Sprite {
+                y: self.oam_ram[idx_sprite * 4],
+                x: self.oam_ram[idx_sprite * 4 + 1],
+                idx_tile: self.oam_ram[idx_sprite * 4 + 2],
+                idx_sprite: idx_sprite as u8,
+                palette: bit!(sprite_bits, SpriteBit::PALETTE),
+                flip_h: bit!(sprite_bits, SpriteBit::FLIP_H),
+                flip_v: bit!(sprite_bits, SpriteBit::FLIP_V),
+                behind_bg: bit!(sprite_bits, SpriteBit::BEHIND_BG),
+            });
+
             counter += 1;
             if counter == 10 {
-                return;
+                break;
+            }
+        }
+
+        sprites.sort_unstable_by_key(|s| -((s.x as isize) << 8 | s.idx_sprite as isize));
+        return sprites;
+    }
+
+    fn get_sprite_lines(&self, bg: &mut [u8], fg: &mut [u8], y: isize) {
+        let sprites = self.get_sprite_on_line(y);
+        for sprite in sprites {
+            let mut idx_tile = sprite.idx_tile;
+            let sprite_y = sprite.y as isize - 16;
+            let mut y_on_tile = y - sprite_y;
+
+            if y_on_tile >= 8 {
+                y_on_tile -= 8;
+                idx_tile ^= 1;
             }
 
-            let lsb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16];
-            let msb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16];
+            if sprite.flip_v {
+                idx_tile ^= 1;
+                y_on_tile = 7 - y_on_tile;
+            }
 
-            for x in 0..8 {
-                // todo
+            let lsb_byte =
+                self.video_ram[Lcd::TILE_ADDR + idx_tile as usize * 16 + y_on_tile as usize * 2];
+            let msb_byte = self.video_ram
+                [Lcd::TILE_ADDR + idx_tile as usize * 16 + y_on_tile as usize * 2 + 1];
+
+            for i in 0..8 {
+                let x = if sprite.flip_h { i } else { 7 - i };
+                let lsb = (lsb_byte >> x) & 1;
+                let msb = (msb_byte >> x) & 1;
+                let palette = if sprite.palette { self.obp1 } else { self.obp0 };
+                let pixel = apply_palette(palette, msb * 2 + lsb);
+                if pixel == 0 {
+                    continue; // transparant
+                }
+                if sprite.behind_bg {
+                    bg[sprite.x as usize + i] = pixel;
+                } else {
+                    fg[sprite.x as usize + i] = pixel;
+                }
             }
         }
     }
 
     fn draw_line(&mut self) {
-        for x in 0..Lcd::WIDTH {
-            if bit!(self.lcdc, LcdcBit::Bg) {
-                let tile_index_addr =
-                    Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::BgArea) as usize];
-                let pixel = self.get_pixel(
-                    (self.ly + self.scy) as usize,
-                    (x + self.scx) as usize,
-                    tile_index_addr,
-                );
-            }
-            let wx = self.wx as isize - 7;
-            let wy = self.wy as isize;
-            if bit!(self.lcdc, LcdcBit::Win) && x as isize >= wx && self.ly as isize >= wy {
-                // todo count line for window
-                let tile_index_addr =
-                    Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::WinArea) as usize];
-                let pixel = self.get_pixel(
-                    (self.ly as isize - wy) as usize,
-                    (x as isize - wx) as usize,
-                    tile_index_addr,
-                );
-            }
+        let mut sprite_bg = [0; Lcd::WIDTH as usize];
+        let mut sprite_fg = [0; Lcd::WIDTH as usize];
 
-            if bit!(self.lcdc, LcdcBit::Obj) {}
+        if bit!(self.lcdc, LcdcBit::Obj) {
+            self.get_sprite_lines(&mut sprite_bg, &mut sprite_fg, self.ly as isize);
+            for x in 0..(Lcd::WIDTH as usize) {
+                self.display[self.ly as usize * Lcd::WIDTH as usize + x] = sprite_bg[x];
+            }
+        }
+
+        if bit!(self.lcdc, LcdcBit::Bg) {
+            let tile_index_addr = Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::BgArea) as usize];
+            let y = (self.ly as usize + self.scy as usize) & 0xff;
+
+            for x in 0..(Lcd::WIDTH as usize) {
+                let x = (x + self.scx as usize) & 0xff;
+                let bg_pixel = self.get_pixel_bg(y, x, tile_index_addr);
+                let sprite_pixel = self.display[self.ly as usize * Lcd::WIDTH as usize + x];
+                if bg_pixel == 0 || sprite_pixel == 0 {
+                    self.display[self.ly as usize * Lcd::WIDTH as usize + x] = bg_pixel;
+                }
+            }
+        }
+
+        if bit!(self.lcdc, LcdcBit::Obj) {
+            for x in 0..(Lcd::WIDTH as usize) {
+                if sprite_fg[x] != 0 {
+                    self.display[self.ly as usize * Lcd::WIDTH as usize + x] = sprite_fg[x];
+                }
+            }
+        }
+
+        let wy = self.wy as isize;
+        if bit!(self.lcdc, LcdcBit::Win) && self.ly as isize >= wy {
+            let tile_index_addr = Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::WinArea) as usize];
+            let wx = self.wx as isize - 7;
+            let start = if wx < 0 { 0 } else { wx } as usize;
+
+            for x in start..(Lcd::WIDTH as usize) {
+                let x_on_window = x - wx as usize;
+                let win_pixel =
+                    self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr);
+                if win_pixel != 0 {
+                    self.display[self.ly as usize * Lcd::WIDTH as usize + x] = win_pixel;
+                }
+            }
+            self.window_line += 1
         }
     }
 
@@ -226,19 +317,23 @@ impl Lcd {
     const MODE_DURATION: [usize; 4] = [51, 114, 20, 43];
     const NB_LY: u8 = 154;
 
-    fn inc_ly(&mut self) {
-        self.ly += 1;
-        if self.ly == Lcd::NB_LY {
-            self.ly = 0;
-        }
+    fn check_ly_eq_lyc(&mut self) {
         if self.ly == self.lyc {
             self.stat |= 1 << (StatBit::LycEqLy as u8);
+            if bit!(self.stat, StatBit::IntLyc) {
+                self.interupt |= Interupt::LcdStats as u8;
+            }
         } else {
             self.stat &= !(1 << (StatBit::LycEqLy as u8));
         }
-        if bit!(self.stat, StatBit::IntLyc) {
-            self.interupt |= Interupt::LcdStats as u8;
+    }
+
+    fn inc_ly(&mut self) {
+        self.ly = (1 + self.ly) % Lcd::NB_LY;
+        if self.ly == 0 {
+            self.window_line = 0;
         }
+        self.check_ly_eq_lyc();
     }
 
     fn change_mode(&mut self) {
@@ -299,17 +394,13 @@ impl Lcd {
     const TILE_ADDR: usize = 0x0000;
     const COLOR: [u32; 4] = [0, 90, 180, 255];
 
-    fn apply_palette(&self, color: u8) -> u8 {
-        return (self.bgp >> (color * 2)) & 0x3;
-    }
-
     pub fn get_background(&self, background: &mut [u32], bg_area: bool) {
         let tile_index_addr = Lcd::TILE_INDEX_ADDR[bg_area as usize];
 
         for y in 0..256 {
             for x in 0..256 {
-                let pixel = self.get_pixel(y, x, tile_index_addr);
-                background[y * 256 + x] = Lcd::COLOR[self.apply_palette(pixel) as usize];
+                let pixel = self.get_pixel_bg(y, x, tile_index_addr);
+                background[y * 256 + x] = Lcd::COLOR[pixel as usize];
             }
         }
     }
