@@ -76,7 +76,7 @@ impl Mmu {
 
             0xff01 => NO_DATA, // stdout
             0xff04..=0xff07 => self.timer.read(addr),
-            0xff40..=0xff45 | 0xff47..=0xff4b => self.lcd.read(addr),
+            0xff40..=0xff4b => self.lcd.read(addr),
 
             0xff0f => self.interupt_flag,
             0xffff => self.interupt_enable,
@@ -98,7 +98,7 @@ impl Mmu {
                 io::stdout().flush().unwrap();
             }
             0xff04..=0xff07 => self.timer.write(addr, value),
-            0xff40..=0xff45 | 0xff47..=0xff4b => self.lcd.write(addr, value),
+            0xff40..=0xff4b => self.lcd.write(addr, value),
 
             0xff0f => self.interupt_flag = value & (Interupt::Mask as u8),
             0xff50 => self.disable_boot_rom = true,

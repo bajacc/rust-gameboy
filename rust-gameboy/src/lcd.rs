@@ -163,7 +163,7 @@ impl Lcd {
     fn get_pixel_bg(&self, y: usize, x: usize, tile_index_addr: usize) -> u8 {
         let tile_num = (y / 8) * 32 + (x / 8);
         let mut tile_addr = self.video_ram[tile_index_addr + tile_num] as usize;
-        if !bit!(self.lcdc, LcdcBit::TileSource) {
+        if !bit!(self.lcdc, LcdcBit::TileSource) && tile_addr < 0x80 {
             tile_addr += 256;
         }
         let lsb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2];
@@ -211,9 +211,9 @@ impl Lcd {
     fn get_sprite_lines(&self, bg: &mut [u8], fg: &mut [u8], y: isize) {
         let sprites = self.get_sprite_on_line(y);
         for sprite in sprites {
-            let mut idx_tile = sprite.idx_tile;
+            let mut idx_tile = sprite.idx_tile as usize;
             let sprite_y = sprite.y as isize - 16;
-            let mut y_on_tile = y - sprite_y;
+            let mut y_on_tile = (y - sprite_y) as usize;
 
             if y_on_tile >= 8 {
                 y_on_tile -= 8;
@@ -225,10 +225,8 @@ impl Lcd {
                 y_on_tile = 7 - y_on_tile;
             }
 
-            let lsb_byte =
-                self.video_ram[Lcd::TILE_ADDR + idx_tile as usize * 16 + y_on_tile as usize * 2];
-            let msb_byte = self.video_ram
-                [Lcd::TILE_ADDR + idx_tile as usize * 16 + y_on_tile as usize * 2 + 1];
+            let lsb_byte = self.video_ram[Lcd::TILE_ADDR + idx_tile * 16 + y_on_tile * 2];
+            let msb_byte = self.video_ram[Lcd::TILE_ADDR + idx_tile * 16 + y_on_tile * 2 + 1];
 
             for i in 0..8 {
                 let x = if sprite.flip_h { i } else { 7 - i };
@@ -239,10 +237,11 @@ impl Lcd {
                 if pixel == 0 {
                     continue; // transparant
                 }
+                let x_on_screen = sprite.x as usize + i - 8;
                 if sprite.behind_bg {
-                    bg[sprite.x as usize + i] = pixel;
+                    bg[x_on_screen] = pixel;
                 } else {
-                    fg[sprite.x as usize + i] = pixel;
+                    fg[x_on_screen] = pixel;
                 }
             }
         }
@@ -392,7 +391,7 @@ impl Lcd {
 
     const TILE_INDEX_ADDR: [usize; 2] = [0x1800, 0x1C00];
     const TILE_ADDR: usize = 0x0000;
-    const COLOR: [u32; 4] = [0, 90, 180, 255];
+    const COLOR: [u32; 4] = [0xffffff, 0xc0c0c0, 0x606060, 0x000000];
 
     pub fn get_background(&self, background: &mut [u32], bg_area: bool) {
         let tile_index_addr = Lcd::TILE_INDEX_ADDR[bg_area as usize];

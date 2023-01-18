@@ -29,7 +29,7 @@ impl Renderer {
             .unwrap();
     }
 
-    const COLOR: [u32; 4] = [0, 90, 180, 255];
+    const COLOR: [u32; 4] = [0xffffff, 0xc0c0c0, 0x606060, 0x000000];
 
     pub fn render_u8(&mut self, buffer: &[u8]) {
         let mut b = vec![0; self.height * self.width];
