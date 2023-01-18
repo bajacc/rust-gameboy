@@ -35,11 +35,16 @@ fn main() {
 
     let mbc = Mbc::new(arr);
     let mut gb = GameBoy::new(mbc);
-    let mut renderer = Renderer::new(256, 256);
+
+    let mut renderer = Renderer::new(192, 128);
+    let mut bg_renderer = Renderer::new(256, 256);
+    let mut bg_renderer2 = Renderer::new(256, 256);
 
     gb.disassemble(10);
 
-    let mut buffer: [u32; 256 * 256] = [0; 256 * 256];
+    let mut buffer: [u32; 192 * 128] = [0; 192 * 128];
+    let mut bg_buffer: [u32; 256 * 256] = [0; 256 * 256];
+    let mut bg_buffer2: [u32; 256 * 256] = [0; 256 * 256];
 
     loop {
         print!(">>> ");
@@ -47,8 +52,12 @@ fn main() {
         let mut s = String::new();
         io::stdin().read_line(&mut s).expect("Failed to read input");
 
-        gb.mmu.lcd.get_background(&mut buffer);
+        gb.mmu.lcd.get_tiles(&mut buffer);
+        gb.mmu.lcd.get_background(&mut bg_buffer, false);
+        gb.mmu.lcd.get_background(&mut bg_buffer2, true);
         renderer.render(&buffer);
+        bg_renderer.render(&bg_buffer);
+        bg_renderer2.render(&bg_buffer2);
 
         match s.trim() {
             "s" => {
@@ -93,9 +102,13 @@ fn main() {
                 gb.cpu.print();
             }
             "r" => loop {
-                gb.mmu.lcd.get_background(&mut buffer);
+                gb.mmu.lcd.get_tiles(&mut buffer);
+                gb.mmu.lcd.get_background(&mut bg_buffer, false);
+                gb.mmu.lcd.get_background(&mut bg_buffer2, true);
                 renderer.render(&buffer);
-                for i in 0..100000 {
+                bg_renderer.render(&bg_buffer);
+                bg_renderer2.render(&bg_buffer2);
+                for _ in 0..100000 {
                     gb.cycle();
                 }
             },

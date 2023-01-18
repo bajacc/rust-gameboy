@@ -20,24 +20,24 @@ pub struct Lcd {
 }
 
 pub enum LcdcBit {
-    BG = 0,
+    Bg = 0,
     OBJ = 1,
-    OBJ_SIZE = 2,
-    BG_AREA = 3,
-    TILE_SOURCE = 4,
-    WIN = 5,
-    WIN_AREA = 6,
-    LCD_STATUS = 7,
+    ObjSize = 2,
+    BgArea = 3,
+    TileSource = 4,
+    Win = 5,
+    WinArea = 6,
+    LcdStatus = 7,
 }
 
 pub enum StatBit {
-    MODE0 = 0,
-    MODE1 = 1,
-    LYC_EQ_LY = 2,
-    INT_MODE0 = 3,
-    INT_MODE1 = 4,
-    INT_MODE2 = 5,
-    INT_LYC = 6,
+    mode0 = 0,
+    mode1 = 1,
+    LycEqLy = 2,
+    IntMode0 = 3,
+    IntMode1 = 4,
+    IntMode2 = 5,
+    IntLyc = 6,
 }
 
 macro_rules! bit {
@@ -127,11 +127,11 @@ impl Lcd {
             self.ly = 0;
         }
         if self.ly == self.lyc {
-            self.stat |= 1 << (StatBit::LYC_EQ_LY as u8);
+            self.stat |= 1 << (StatBit::LycEqLy as u8);
         } else {
-            self.stat &= !(1 << (StatBit::LYC_EQ_LY as u8));
+            self.stat &= !(1 << (StatBit::LycEqLy as u8));
         }
-        if bit!(self.stat, StatBit::INT_LYC) {
+        if bit!(self.stat, StatBit::IntLyc) {
             self.interupt |= Interupt::LcdStats as u8;
         }
     }
@@ -142,13 +142,13 @@ impl Lcd {
                 if self.ly + 1 == Lcd::HEIGHT {
                     self.inc_ly();
                     self.interupt |= Interupt::Vblank as u8;
-                    if bit!(self.stat, StatBit::INT_MODE1) {
+                    if bit!(self.stat, StatBit::IntMode1) {
                         self.interupt |= Interupt::LcdStats as u8;
                     }
                     self.set_mode(1);
                 } else {
                     self.inc_ly();
-                    if bit!(self.stat, StatBit::INT_MODE1) {
+                    if bit!(self.stat, StatBit::IntMode2) {
                         self.interupt |= Interupt::LcdStats as u8;
                     }
                     self.set_mode(2);
@@ -157,7 +157,7 @@ impl Lcd {
             1 => {
                 if self.ly + 1 == Lcd::NB_LY {
                     self.inc_ly();
-                    if bit!(self.stat, StatBit::INT_MODE2) {
+                    if bit!(self.stat, StatBit::IntMode2) {
                         self.interupt |= Interupt::LcdStats as u8;
                     }
                     self.set_mode(2);
@@ -169,6 +169,9 @@ impl Lcd {
                 self.set_mode(3);
             }
             3 => {
+                if bit!(self.stat, StatBit::IntMode0) {
+                    self.interupt |= Interupt::LcdStats as u8;
+                }
                 self.set_mode(0);
             }
             _ => panic!("mode {} does not exist", self.get_mode()),
@@ -184,8 +187,7 @@ impl Lcd {
         self.num_idle_cycle -= 1;
     }
 
-    const BG_ADDR_1: usize = 0x0800;
-    const BG_ADDR_2: usize = 0x1000;
+    const BG_ADDR: [usize; 2] = [0x1800, 0x1C00];
     const TILE_ADDR: usize = 0x0000;
     const COLOR: [u32; 4] = [0, 90, 180, 255];
 
@@ -193,18 +195,14 @@ impl Lcd {
         return (self.bgp >> (color * 2)) & 0x3;
     }
 
-    pub fn get_background(&self, background: &mut [u32]) {
-        let bg_addr = if bit!(self.lcdc, LcdcBit::BG_AREA) {
-            Lcd::BG_ADDR_1
-        } else {
-            Lcd::BG_ADDR_2
-        };
+    pub fn get_background(&self, background: &mut [u32], bg_area: bool) {
+        let bg_addr = Lcd::BG_ADDR[bg_area as usize];
 
         for y in 0..256 {
             for x in 0..256 {
                 let tile_num = (y / 8) * 32 + (x / 8);
                 let mut tile_addr = self.video_ram[bg_addr + tile_num] as usize;
-                if !bit!(self.lcdc, LcdcBit::TILE_SOURCE) {
+                if !bit!(self.lcdc, LcdcBit::TileSource) {
                     tile_addr += 256;
                 }
                 let lsb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2];
@@ -213,6 +211,21 @@ impl Lcd {
                 let lsb = (lsb_byte >> bit_pos) & 1;
                 let msb = (msb_byte >> bit_pos) & 1;
                 background[y * 256 + x] = Lcd::COLOR[self.apply_palette(msb * 2 + lsb) as usize];
+            }
+        }
+    }
+
+    pub fn get_tiles(&self, buffer: &mut [u32]) {
+        // buffer size 384 = 3 * 128 = 24 * 16 tiles. 192 * 128
+        for y in 0..24 * 8 {
+            for x in 0..16 * 8 {
+                let tile_addr = (y / 8) * 16 + (x / 8);
+                let lsb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2];
+                let msb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2 + 1];
+                let bit_pos = 7 - (x % 8);
+                let lsb = (lsb_byte >> bit_pos) & 1;
+                let msb = (msb_byte >> bit_pos) & 1;
+                buffer[y * 128 + x] = Lcd::COLOR[(msb * 2 + lsb) as usize];
             }
         }
     }
