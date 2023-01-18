@@ -26,7 +26,7 @@ const BOOT_ROM: [u8; 256] = [
     0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x00, 0x00, 0x3E, 0x01, 0xE0, 0x50,
 ];
 
-const NO_DATA: u8 = 0xff;
+pub const NO_DATA: u8 = 0xff;
 
 pub struct Mmu {
     pub interupt_enable: u8,
@@ -71,11 +71,10 @@ impl Mmu {
             0x8000..=0x9fff => self.lcd.read(addr),
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000],
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000],
-            0xfe00..=0xfe9f => self.graphical_ram[addr as usize - 0xfe00],
+            0xfe00..=0xfe9f => self.lcd.read(addr),
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80],
 
             0xff01 => NO_DATA, // stdout
-            0xff46 => NO_DATA, // dma
             0xff04..=0xff07 => self.timer.read(addr),
             0xff40..=0xff45 | 0xff47..=0xff4b => self.lcd.read(addr),
 
@@ -91,20 +90,12 @@ impl Mmu {
             0x8000..=0x9fff => self.lcd.write(addr, value),
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000] = value,
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000] = value,
-            0xfe00..=0xfe9f => self.graphical_ram[addr as usize - 0xfe00] = value,
+            0xfe00..=0xfe9f => self.lcd.write(addr, value),
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80] = value,
 
             0xff01 => {
                 print!("{}", value as char);
                 io::stdout().flush().unwrap();
-            }
-            0xff46 => {
-                // DMA
-                // todo: make the dma transfer take 1 cycle per copy
-                let source: u16 = (value as u16) << 8;
-                for i in 0..0xa0 {
-                    self.graphical_ram[i] = self.read(source + (i as u16));
-                }
             }
             0xff04..=0xff07 => self.timer.write(addr, value),
             0xff40..=0xff45 | 0xff47..=0xff4b => self.lcd.write(addr, value),

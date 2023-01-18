@@ -15,7 +15,7 @@ pub struct Timer {
     pub tma: u8,
     pub tac: u8,
     state: bool,
-    interupt: Interupt,
+    interupt: u8,
 }
 
 impl Timer {
@@ -26,13 +26,13 @@ impl Timer {
             tma: 0,
             tac: 0,
             state: false,
-            interupt: Interupt::None,
+            interupt: 0,
         }
     }
 
     pub fn extract_interupt(&mut self) -> u8 {
-        let r = self.interupt as u8;
-        self.interupt = Interupt::None;
+        let r = self.interupt;
+        self.interupt = 0;
         return r;
     }
 
@@ -68,7 +68,7 @@ impl Timer {
         if self.state && !curr_state {
             if self.tima == 0xff {
                 self.tima = self.tma;
-                self.interupt = Interupt::Timer;
+                self.interupt |= Interupt::Timer as u8;
             } else {
                 self.tima += 1;
             }
