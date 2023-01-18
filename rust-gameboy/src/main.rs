@@ -2,6 +2,7 @@ mod alu;
 mod cpu;
 mod desassembler;
 mod gb;
+mod joypad;
 mod lcd;
 mod mbc;
 mod mmu;
@@ -9,23 +10,44 @@ mod opcodes;
 mod opcodes_const;
 mod renderer;
 mod timer;
+use std::thread;
+use std::time::{Duration, Instant};
 
 use gb::GameBoy;
 use mbc::Mbc;
 
 use std::env;
 use std::fs::File;
-use std::io;
 use std::io::BufReader;
 use std::io::Read;
-use std::io::Write;
 
 use crate::lcd::Lcd;
 use crate::renderer::Renderer;
+use minifb::{Key, Window, WindowOptions};
 
+const KEY_MAP: [(Key, joypad::Key); 8] = [
+    (Key::Z, joypad::Key::A),
+    (Key::X, joypad::Key::B),
+    (Key::Enter, joypad::Key::Start),
+    (Key::Backspace, joypad::Key::Select),
+    (Key::Up, joypad::Key::Up),
+    (Key::Down, joypad::Key::Down),
+    (Key::Right, joypad::Key::Right),
+    (Key::Left, joypad::Key::Left),
+];
+// 2^20 cycle per second
+const CYCLE_DURATION: Duration = Duration::from_micros(10u64.pow(9) / 2u64.pow(20));
+
+// 60 fps
+const RENDER_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 60);
+
+// todo: use clap to give more option at launch
 fn main() {
     let args: Vec<String> = env::args().collect();
     assert!(args.len() == 2);
+
+    let mut last_cycle = Instant::now();
+    let mut last_render = Instant::now();
 
     let f = File::open(&args[1]).expect("couldn't read file");
     let mut reader = BufReader::new(f);
@@ -36,89 +58,28 @@ fn main() {
 
     let mbc = Mbc::new(arr);
     let mut gb = GameBoy::new(mbc);
+    let mut renderer = Renderer::new(Lcd::HEIGHT as usize * 2, Lcd::WIDTH as usize * 2);
 
-    let mut renderer = Renderer::new(192, 128);
-    let mut bg_renderer = Renderer::new(256, 256);
-    let mut bg_renderer2 = Renderer::new(256, 256);
-    let mut gb_renderer = Renderer::new(Lcd::HEIGHT as usize * 2, Lcd::WIDTH as usize * 2);
+    while renderer.window.is_open() && !renderer.window.is_key_down(Key::Escape) {
+        if last_render.elapsed() > RENDER_DURATION {
+            last_render = Instant::now();
+            renderer.render_u8(&gb.mmu.lcd.display);
+        }
 
-    gb.disassemble(10);
-
-    let mut buffer: [u32; 192 * 128] = [0; 192 * 128];
-    let mut bg_buffer: [u32; 256 * 256] = [0; 256 * 256];
-    let mut bg_buffer2: [u32; 256 * 256] = [0; 256 * 256];
-
-    loop {
-        print!(">>> ");
-        io::stdout().flush().unwrap();
-        let mut s = String::new();
-        io::stdin().read_line(&mut s).expect("Failed to read input");
-
-        gb.mmu.lcd.get_tiles(&mut buffer);
-        gb.mmu.lcd.get_background(&mut bg_buffer, false);
-        gb.mmu.lcd.get_background(&mut bg_buffer2, true);
-        renderer.render(&buffer);
-        bg_renderer.render(&bg_buffer);
-        bg_renderer2.render(&bg_buffer2);
-        gb_renderer.render_u8(&gb.mmu.lcd.display);
-
-        match s.trim() {
-            "s" => {
-                gb.step();
-                gb.disassemble(1);
-                for i in 0..16 {
-                    print!("{:02x} ", gb.mmu.read(0xffff - i));
+        if last_cycle.elapsed() > CYCLE_DURATION {
+            last_cycle = Instant::now();
+            gb.cycle();
+            for (minifb_key, gb_key) in KEY_MAP {
+                if renderer.window.is_key_down(minifb_key) {
+                    gb.mmu.joypad.press_key(gb_key);
+                } else {
+                    gb.mmu.joypad.release_key(gb_key);
                 }
-                println!();
             }
-            "ss" => {
-                for _ in 0..1000000 {
-                    gb.step();
-                }
-                gb.disassemble(10);
-                for i in 0..16 {
-                    print!("{:02x} ", gb.mmu.read(0xffff - i));
-                }
-                println!();
-            }
-            "l" => {
-                let pc = gb.cpu.pc;
-                gb.step();
-                while pc != gb.cpu.pc {
-                    gb.step();
-                }
-                gb.disassemble(10);
-                for i in 0..16 {
-                    print!("{:02x} ", gb.mmu.read(0xffff - i));
-                }
-                gb.cpu.print();
-            }
-            "f" => {
-                let pc = gb.cpu.pc;
-                while gb.cpu.pc <= pc {
-                    gb.cycle();
-                }
-                gb.disassemble(10);
-                for i in 0..16 {
-                    print!("{:02x} ", gb.mmu.read(0xffff - i));
-                }
-                gb.cpu.print();
-            }
-            "r" => loop {
-                gb.mmu.lcd.get_tiles(&mut buffer);
-                gb.mmu.lcd.get_background(&mut bg_buffer, false);
-                gb.mmu.lcd.get_background(&mut bg_buffer2, true);
-                renderer.render(&buffer);
-                bg_renderer.render(&bg_buffer);
-                bg_renderer2.render(&bg_buffer2);
-                gb_renderer.render_u8(&gb.mmu.lcd.display);
-                for _ in 0..100000 {
-                    gb.cycle();
-                }
-            },
-            "c" => gb.cpu.print(),
-            "p" => gb.disassemble(30),
-            _ => panic!("command {} not found", s.trim()),
+        }
+
+        if last_cycle.elapsed() < CYCLE_DURATION {
+            thread::sleep(CYCLE_DURATION - last_cycle.elapsed());
         }
     }
 }

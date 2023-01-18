@@ -1,4 +1,5 @@
 use crate::cpu::Interupt;
+use crate::joypad::Joypad;
 use crate::lcd::Lcd;
 use crate::mbc::Mbc;
 use crate::timer::Timer;
@@ -41,6 +42,7 @@ pub struct Mmu {
 
     pub timer: Timer,
     pub lcd: Lcd,
+    pub joypad: Joypad,
 }
 
 impl Mmu {
@@ -55,6 +57,7 @@ impl Mmu {
             high_ram: [0; 0x7f],
             timer: Timer::new(),
             lcd: Lcd::new(),
+            joypad: Joypad::new(),
         }
     }
 
@@ -74,6 +77,7 @@ impl Mmu {
             0xfe00..=0xfe9f => self.lcd.read(addr),
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80],
 
+            0xff00 => self.joypad.read(addr),
             0xff01 => NO_DATA, // stdout
             0xff04..=0xff07 => self.timer.read(addr),
             0xff40..=0xff4b => self.lcd.read(addr),
@@ -93,6 +97,7 @@ impl Mmu {
             0xfe00..=0xfe9f => self.lcd.write(addr, value),
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80] = value,
 
+            0xff00 => self.joypad.write(addr, value),
             0xff01 => {
                 print!("{}", value as char);
                 io::stdout().flush().unwrap();
@@ -119,11 +124,13 @@ impl Mmu {
     pub fn get_interupts(&mut self) -> u8 {
         self.interupt_flag |= self.timer.extract_interupt();
         self.interupt_flag |= self.lcd.extract_interupt();
+        self.interupt_flag |= self.joypad.extract_interupt();
         return self.interupt_flag & self.interupt_enable;
     }
 
     pub fn cycle(&mut self) {
         self.timer.cycle();
         self.lcd.cycle();
+        self.joypad.cycle();
     }
 }

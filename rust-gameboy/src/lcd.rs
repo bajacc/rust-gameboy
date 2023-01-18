@@ -81,6 +81,11 @@ impl Lcd {
     pub const WIDTH: u8 = 160;
     pub const NUM_PIXELS: usize = (Lcd::HEIGHT as usize) * (Lcd::WIDTH as usize);
 
+    const MODE_DURATION: [usize; 4] = [51, 114, 20, 43];
+    const NB_LY: u8 = 154;
+    const TILE_INDEX_ADDR: [usize; 2] = [0x1800, 0x1C00];
+    const TILE_ADDR: usize = 0x0000;
+
     pub fn new() -> Self {
         Lcd {
             video_ram: [0; 0x2000],
@@ -131,7 +136,9 @@ impl Lcd {
                 self.lcdc = value;
                 if !bit!(self.lcdc, LcdcBit::LcdStatus) {
                     // switch off lcd
-                    self.ly = 0; // todo interupts?
+                    self.ly = 0;
+                    self.set_mode(0);
+                    self.check_ly_eq_lyc();
                     self.window_line = 0;
                     for pixel in self.display.iter_mut() {
                         *pixel = 0;
@@ -232,17 +239,14 @@ impl Lcd {
                 let x = if sprite.flip_h { i } else { 7 - i };
                 let lsb = (lsb_byte >> x) & 1;
                 let msb = (msb_byte >> x) & 1;
-                let palette = if sprite.palette { self.obp1 } else { self.obp0 };
-                let pixel = apply_palette(palette, msb * 2 + lsb);
+                let pixel = msb * 2 + lsb;
                 if pixel == 0 {
                     continue; // transparant
                 }
                 let x_on_screen = sprite.x as usize + i - 8;
-                if sprite.behind_bg {
-                    bg[x_on_screen] = pixel;
-                } else {
-                    fg[x_on_screen] = pixel;
-                }
+                let arr = if sprite.behind_bg { &mut *bg } else { &mut *fg };
+                let palette = if sprite.palette { self.obp1 } else { self.obp0 };
+                arr[x_on_screen] = apply_palette(palette, pixel);
             }
         }
     }
@@ -312,9 +316,6 @@ impl Lcd {
         self.stat &= !3;
         self.stat |= value & 3;
     }
-
-    const MODE_DURATION: [usize; 4] = [51, 114, 20, 43];
-    const NB_LY: u8 = 154;
 
     fn check_ly_eq_lyc(&mut self) {
         if self.ly == self.lyc {
@@ -389,8 +390,6 @@ impl Lcd {
         self.num_idle_cycle -= 1;
     }
 
-    const TILE_INDEX_ADDR: [usize; 2] = [0x1800, 0x1C00];
-    const TILE_ADDR: usize = 0x0000;
     const COLOR: [u32; 4] = [0xffffff, 0xc0c0c0, 0x606060, 0x000000];
 
     pub fn get_background(&self, background: &mut [u32], bg_area: bool) {

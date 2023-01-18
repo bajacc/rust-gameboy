@@ -2,9 +2,9 @@ extern crate minifb;
 use minifb::{Window, WindowOptions};
 
 pub struct Renderer {
-    window: Window,
-    width: usize,
-    height: usize,
+    pub window: Window,
+    pub width: usize,
+    pub height: usize,
 }
 
 impl Renderer {
