@@ -5,10 +5,13 @@ pub struct Renderer {
     pub window: Window,
     pub width: usize,
     pub height: usize,
+    pub scale: usize,
 }
 
 impl Renderer {
-    pub fn new(height: usize, width: usize) -> Self {
+    pub fn new(mut height: usize, mut width: usize, scale: usize) -> Self {
+        height *= scale;
+        width *= scale;
         let mut window = Window::new("GameBoy", width, height, WindowOptions::default())
             .unwrap_or_else(|e| {
                 panic!("{}", e);
@@ -19,6 +22,7 @@ impl Renderer {
             window: window,
             width: width,
             height: height,
+            scale: scale,
         }
     }
 
@@ -35,8 +39,9 @@ impl Renderer {
         let mut b = vec![0; self.height * self.width];
         for y in 0..self.height {
             for x in 0..self.width {
-                b[y * self.width + x] =
-                    Renderer::COLOR[buffer[(y / 2) * (self.width / 2) + (x / 2)] as usize];
+                b[y * self.width + x] = Renderer::COLOR[buffer
+                    [(y / self.scale) * (self.width / self.scale) + (x / self.scale)]
+                    as usize];
             }
         }
         self.window

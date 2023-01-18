@@ -40,7 +40,10 @@ const CYCLE_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 2u64.pow(20
 // 60 fps
 const RENDER_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 60);
 
-const NUM_CYCLE_BETWEEN_RENDER: u128 = RENDER_DURATION.as_nanos() / CYCLE_DURATION.as_nanos();
+const SPEED_UP: u128 = 2;
+
+const NUM_CYCLE_BETWEEN_RENDER: u128 =
+    RENDER_DURATION.as_nanos() * SPEED_UP / CYCLE_DURATION.as_nanos();
 
 // todo: use clap to give more option at launch
 fn main() {
@@ -58,19 +61,24 @@ fn main() {
 
     let mbc = Mbc::new(arr);
     let mut gb = GameBoy::new(mbc);
-    let mut renderer = Renderer::new(Lcd::HEIGHT as usize * 2, Lcd::WIDTH as usize * 2);
+    let mut renderer = Renderer::new(Lcd::HEIGHT as usize, Lcd::WIDTH as usize, 4);
 
     while renderer.window.is_open() && !renderer.window.is_key_down(Key::Escape) {
-        for _ in 0..NUM_CYCLE_BETWEEN_RENDER {
-            gb.cycle();
-        }
-
         for (minifb_key, gb_key) in KEY_MAP {
             if renderer.window.is_key_down(minifb_key) {
                 gb.mmu.joypad.press_key(gb_key);
             } else {
                 gb.mmu.joypad.release_key(gb_key);
             }
+        }
+
+        for _ in 0..NUM_CYCLE_BETWEEN_RENDER {
+            gb.cycle();
+        }
+
+        // wait for the display to be drawn to avoid half drawn window
+        while gb.mmu.lcd.get_mode() != 1 {
+            gb.cycle();
         }
 
         renderer.render_u8(&gb.mmu.lcd.display);

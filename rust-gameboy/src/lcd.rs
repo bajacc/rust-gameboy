@@ -69,7 +69,12 @@ macro_rules! bit {
     };
 }
 
+const TRANSPARENT: u8 = 0xff;
+
 fn apply_palette(palette: u8, color: u8) -> u8 {
+    if color == 0 {
+        return TRANSPARENT;
+    }
     return (palette >> (color * 2)) & 0x3;
 }
 
@@ -175,7 +180,7 @@ impl Lcd {
         let bit_pos = 7 - (x % 8);
         let lsb = (lsb_byte >> bit_pos) & 1;
         let msb = (msb_byte >> bit_pos) & 1;
-        return apply_palette(self.bgp, msb * 2 + lsb);
+        return msb * 2 + lsb;
     }
 
     const OBJ_SIZE_Y: [isize; 2] = [8, 16];
@@ -232,17 +237,16 @@ impl Lcd {
             let lsb_byte = self.video_ram[Lcd::TILE_ADDR + idx_tile * 16 + y_on_tile * 2];
             let msb_byte = self.video_ram[Lcd::TILE_ADDR + idx_tile * 16 + y_on_tile * 2 + 1];
 
+            let arr = if sprite.behind_bg { &mut *bg } else { &mut *fg };
+            let palette = if sprite.palette { self.obp1 } else { self.obp0 };
+
             for i in 0..8 {
                 let x = if sprite.flip_h { i } else { 7 - i };
                 let lsb = (lsb_byte >> x) & 1;
                 let msb = (msb_byte >> x) & 1;
                 let pixel = msb * 2 + lsb;
-                if pixel == 0 {
-                    continue; // transparant
-                }
                 let x_on_screen = sprite.x as isize + i - 8;
-                let arr = if sprite.behind_bg { &mut *bg } else { &mut *fg };
-                let palette = if sprite.palette { self.obp1 } else { self.obp0 };
+
                 if 0 <= x_on_screen && x_on_screen < Lcd::WIDTH as isize {
                     arr[x_on_screen as usize] = apply_palette(palette, pixel);
                 }
@@ -251,8 +255,8 @@ impl Lcd {
     }
 
     fn draw_line(&mut self) {
-        let mut sprite_bg = [0; Lcd::WIDTH as usize];
-        let mut sprite_fg = [0; Lcd::WIDTH as usize];
+        let mut sprite_bg = [TRANSPARENT; Lcd::WIDTH as usize];
+        let mut sprite_fg = [TRANSPARENT; Lcd::WIDTH as usize];
 
         if bit!(self.lcdc, LcdcBit::Obj) {
             self.get_sprite_lines(&mut sprite_bg, &mut sprite_fg, self.ly as isize);
@@ -267,9 +271,11 @@ impl Lcd {
 
             for x in 0..(Lcd::WIDTH as usize) {
                 let bg_x = (x + self.scx as usize) & 0xff;
-                let bg_pixel = self.get_pixel_bg(bg_y, bg_x, tile_index_addr);
+                let mut bg_pixel = self.get_pixel_bg(bg_y, bg_x, tile_index_addr);
+                bg_pixel = apply_palette(self.bgp, bg_pixel);
                 let sprite_pixel = self.display[self.ly as usize * Lcd::WIDTH as usize + x];
-                if bg_pixel == 0 || sprite_pixel == 0 {
+                self.display[self.ly as usize * Lcd::WIDTH as usize + x] = bg_pixel;
+                if bg_pixel != TRANSPARENT || sprite_pixel == TRANSPARENT {
                     self.display[self.ly as usize * Lcd::WIDTH as usize + x] = bg_pixel;
                 }
             }
@@ -277,7 +283,7 @@ impl Lcd {
 
         if bit!(self.lcdc, LcdcBit::Obj) {
             for x in 0..(Lcd::WIDTH as usize) {
-                if sprite_fg[x] != 0 {
+                if sprite_fg[x] != TRANSPARENT {
                     self.display[self.ly as usize * Lcd::WIDTH as usize + x] = sprite_fg[x];
                 }
             }
@@ -291,13 +297,21 @@ impl Lcd {
 
             for x in start..(Lcd::WIDTH as usize) {
                 let x_on_window = x - wx as usize;
-                let win_pixel =
+                let mut win_pixel =
                     self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr);
-                if win_pixel != 0 {
+                win_pixel = apply_palette(self.bgp, win_pixel);
+                if win_pixel != TRANSPARENT {
                     self.display[self.ly as usize * Lcd::WIDTH as usize + x] = win_pixel;
                 }
             }
             self.window_line += 1
+        }
+
+        for x in 0..(Lcd::WIDTH as usize) {
+            let pixel_addr = self.ly as usize * Lcd::WIDTH as usize + x;
+            if self.display[pixel_addr] == TRANSPARENT {
+                self.display[pixel_addr] = 0;
+            }
         }
     }
 
@@ -307,7 +321,7 @@ impl Lcd {
         return r;
     }
 
-    fn get_mode(&self) -> u8 {
+    pub fn get_mode(&self) -> u8 {
         return self.stat & 3;
     }
 
