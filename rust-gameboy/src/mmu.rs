@@ -4,7 +4,6 @@ use crate::lcd::Lcd;
 use crate::mbc::Mbc;
 use crate::timer::Timer;
 
-use std::borrow::BorrowMut;
 use std::io;
 use std::io::Write;
 

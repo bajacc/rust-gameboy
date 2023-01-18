@@ -23,7 +23,7 @@ use std::io::Read;
 
 use crate::lcd::Lcd;
 use crate::renderer::Renderer;
-use minifb::{Key, Window, WindowOptions};
+use minifb::Key;
 
 const KEY_MAP: [(Key, joypad::Key); 8] = [
     (Key::Z, joypad::Key::A),
@@ -36,17 +36,17 @@ const KEY_MAP: [(Key, joypad::Key); 8] = [
     (Key::Left, joypad::Key::Left),
 ];
 // 2^20 cycle per second
-const CYCLE_DURATION: Duration = Duration::from_micros(10u64.pow(9) / 2u64.pow(20));
-
+const CYCLE_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 2u64.pow(20));
 // 60 fps
 const RENDER_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 60);
+
+const NUM_CYCLE_BETWEEN_RENDER: u128 = RENDER_DURATION.as_nanos() / CYCLE_DURATION.as_nanos();
 
 // todo: use clap to give more option at launch
 fn main() {
     let args: Vec<String> = env::args().collect();
     assert!(args.len() == 2);
 
-    let mut last_cycle = Instant::now();
     let mut last_render = Instant::now();
 
     let f = File::open(&args[1]).expect("couldn't read file");
@@ -61,25 +61,24 @@ fn main() {
     let mut renderer = Renderer::new(Lcd::HEIGHT as usize * 2, Lcd::WIDTH as usize * 2);
 
     while renderer.window.is_open() && !renderer.window.is_key_down(Key::Escape) {
-        if last_render.elapsed() > RENDER_DURATION {
-            last_render = Instant::now();
-            renderer.render_u8(&gb.mmu.lcd.display);
+        for _ in 0..NUM_CYCLE_BETWEEN_RENDER {
+            gb.cycle();
         }
 
-        if last_cycle.elapsed() > CYCLE_DURATION {
-            last_cycle = Instant::now();
-            gb.cycle();
-            for (minifb_key, gb_key) in KEY_MAP {
-                if renderer.window.is_key_down(minifb_key) {
-                    gb.mmu.joypad.press_key(gb_key);
-                } else {
-                    gb.mmu.joypad.release_key(gb_key);
-                }
+        for (minifb_key, gb_key) in KEY_MAP {
+            if renderer.window.is_key_down(minifb_key) {
+                gb.mmu.joypad.press_key(gb_key);
+            } else {
+                gb.mmu.joypad.release_key(gb_key);
             }
         }
 
-        if last_cycle.elapsed() < CYCLE_DURATION {
-            thread::sleep(CYCLE_DURATION - last_cycle.elapsed());
+        renderer.render_u8(&gb.mmu.lcd.display);
+
+        let elapsed = last_render.elapsed();
+        if elapsed < RENDER_DURATION {
+            thread::sleep(RENDER_DURATION - elapsed);
         }
+        last_render = Instant::now();
     }
 }

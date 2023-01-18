@@ -1,6 +1,3 @@
-use core::num;
-use std::cmp::Ordering;
-
 use crate::cpu::Interupt;
 use crate::mmu;
 
@@ -60,10 +57,10 @@ pub enum StatBit {
 }
 
 pub enum SpriteBit {
-    PALETTE = 4,
-    FLIP_H = 5,
-    FLIP_V = 6,
-    BEHIND_BG = 7,
+    Palette = 4,
+    FlipH = 5,
+    FlipV = 6,
+    BehindBg = 7,
 }
 
 macro_rules! bit {
@@ -199,10 +196,10 @@ impl Lcd {
                 x: self.oam_ram[idx_sprite * 4 + 1],
                 idx_tile: self.oam_ram[idx_sprite * 4 + 2],
                 idx_sprite: idx_sprite as u8,
-                palette: bit!(sprite_bits, SpriteBit::PALETTE),
-                flip_h: bit!(sprite_bits, SpriteBit::FLIP_H),
-                flip_v: bit!(sprite_bits, SpriteBit::FLIP_V),
-                behind_bg: bit!(sprite_bits, SpriteBit::BEHIND_BG),
+                palette: bit!(sprite_bits, SpriteBit::Palette),
+                flip_h: bit!(sprite_bits, SpriteBit::FlipH),
+                flip_v: bit!(sprite_bits, SpriteBit::FlipV),
+                behind_bg: bit!(sprite_bits, SpriteBit::BehindBg),
             });
 
             counter += 1;
@@ -243,10 +240,12 @@ impl Lcd {
                 if pixel == 0 {
                     continue; // transparant
                 }
-                let x_on_screen = sprite.x as usize + i - 8;
+                let x_on_screen = sprite.x as isize + i - 8;
                 let arr = if sprite.behind_bg { &mut *bg } else { &mut *fg };
                 let palette = if sprite.palette { self.obp1 } else { self.obp0 };
-                arr[x_on_screen] = apply_palette(palette, pixel);
+                if 0 <= x_on_screen && x_on_screen < Lcd::WIDTH as isize {
+                    arr[x_on_screen as usize] = apply_palette(palette, pixel);
+                }
             }
         }
     }
@@ -264,11 +263,11 @@ impl Lcd {
 
         if bit!(self.lcdc, LcdcBit::Bg) {
             let tile_index_addr = Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::BgArea) as usize];
-            let y = (self.ly as usize + self.scy as usize) & 0xff;
+            let bg_y = (self.ly as usize + self.scy as usize) & 0xff;
 
             for x in 0..(Lcd::WIDTH as usize) {
-                let x = (x + self.scx as usize) & 0xff;
-                let bg_pixel = self.get_pixel_bg(y, x, tile_index_addr);
+                let bg_x = (x + self.scx as usize) & 0xff;
+                let bg_pixel = self.get_pixel_bg(bg_y, bg_x, tile_index_addr);
                 let sprite_pixel = self.display[self.ly as usize * Lcd::WIDTH as usize + x];
                 if bg_pixel == 0 || sprite_pixel == 0 {
                     self.display[self.ly as usize * Lcd::WIDTH as usize + x] = bg_pixel;

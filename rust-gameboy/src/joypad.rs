@@ -56,10 +56,10 @@ impl Joypad {
     pub fn cycle(&mut self) {
         let old_p1 = self.p1;
         self.p1 |= 0x0f;
-        if bit!(self.p1, 4) {
+        if !bit!(self.p1, 4) {
             self.p1 &= self.key_pressed[0];
         }
-        if bit!(self.p1, 5) {
+        if !bit!(self.p1, 5) {
             self.p1 &= self.key_pressed[1];
         }
 
