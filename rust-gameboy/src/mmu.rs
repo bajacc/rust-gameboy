@@ -125,14 +125,14 @@ impl Mmu {
         self.write(addr + 1, (value >> 8) as u8);
     }
 
-    pub fn get_interupts(&self) -> u8 {
+    pub fn get_interupts(&mut self) -> u8 {
+        self.interupt_flag |= self.timer.extract_interupt();
+        self.interupt_flag |= self.lcd.extract_interupt();
         return self.interupt_flag & self.interupt_enable;
     }
 
     pub fn cycle(&mut self) {
         self.timer.cycle();
         self.lcd.cycle();
-        self.interupt_flag |= self.timer.extract_interupt();
-        self.interupt_flag |= self.lcd.extract_interupt();
     }
 }
