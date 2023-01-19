@@ -40,7 +40,7 @@ const CYCLE_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 2u64.pow(20
 // 60 fps
 const RENDER_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 60);
 
-const SPEED_UP: u128 = 2;
+const SPEED_UP: u128 = 1;
 
 const NUM_CYCLE_BETWEEN_RENDER: u128 =
     RENDER_DURATION.as_nanos() * SPEED_UP / CYCLE_DURATION.as_nanos();
