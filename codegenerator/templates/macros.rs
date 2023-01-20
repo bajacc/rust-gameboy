@@ -1,7 +1,7 @@
 {%- macro opcodeString(i) -%}
 {{i.mnemonic}}
 {%- for o in i.operands -%}
-    {%- if not loop.first -%}
+    {%- if not loop.first and o.name != "r8" -%}
         ,
     {%- endif -%}
     {% raw %} {%endraw%}
@@ -14,13 +14,17 @@
     {%- elif o.name == "d16" -%}
         {:#04x}
     {%- elif o.name == "a8" -%}
-        {:#02x}
+        0xff00 + {:#02x}
     {%- elif o.name == "a16" -%}
         {:#04x}
     {%- elif o.name == "r8" -%}
-        {}
+        + {}
     {%- else -%}
-        {{o.name}}
+        {%- if not o.immediate and o.name == "C" -%}
+            0xff00 + C
+        {%- else -%}
+            {{o.name}}
+        {%- endif -%}
     {%- endif -%}
     {%- if o.sign -%}
     {{o.sign}}
