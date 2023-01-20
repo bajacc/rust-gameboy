@@ -21,6 +21,7 @@ pub struct Lcd {
     window_line: u8,
 
     pub display: [u8; Lcd::NUM_PIXELS],
+    pub dma_addr: Option<u8>,
 }
 
 struct Sprite {
@@ -107,6 +108,7 @@ impl Lcd {
             interupt: 0,
             window_line: 0,
             display: [0; Lcd::NUM_PIXELS],
+            dma_addr: None,
         }
     }
 
@@ -152,14 +154,7 @@ impl Lcd {
             0xff43 => self.scx = value,
             0xff44 => (), // ly
             0xff45 => self.lyc = value,
-            0xff46 => {
-                // DMA
-                // todo: make the dma transfer take 1 cycle per copy
-                let source = (value as u16) << 8;
-                for i in 0..self.oam_ram.len() {
-                    self.oam_ram[i] = self.read(source + (i as u16));
-                }
-            }
+            0xff46 => self.dma_addr = Some(value),
             0xff47 => self.bgp = value,
             0xff48 => self.obp0 = value,
             0xff49 => self.obp1 = value,

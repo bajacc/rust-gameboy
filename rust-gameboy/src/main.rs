@@ -1,6 +1,7 @@
 mod alu;
 mod cpu;
 mod desassembler;
+mod dma;
 mod gb;
 mod joypad;
 mod lcd;
@@ -10,6 +11,7 @@ mod opcodes;
 mod opcodes_const;
 mod renderer;
 mod timer;
+
 use std::thread;
 use std::time::{Duration, Instant};
 
