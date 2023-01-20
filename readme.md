@@ -7,6 +7,8 @@
 
 ## Description
 
+*!work in progress!*
+
 Rust Gameboy is a open source Game Boy (GB) written in rust. It has a minibf front end.
 
 ## Features
@@ -23,7 +25,7 @@ Rust Gameboy is a open source Game Boy (GB) written in rust. It has a minibf fro
 - sound
 - Game Boy color features
 - choice of palette
-- debugger
+- debugger *!work in progress!*
 - automatic blargg tests for CI
 
 Note that the cpu and interups blaggs tests pass on this emulator when tested manually.
