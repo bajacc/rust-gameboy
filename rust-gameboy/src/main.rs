@@ -51,13 +51,11 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let f = File::open(cli.path).expect("couldn't read file");
-    let mut reader = BufReader::new(f);
+    let mut f = File::open(cli.path).expect("couldn't read file");
+    let mut buffer = Vec::new();
+    f.read_to_end(&mut buffer).expect("couldn't read file");
 
-    let mut arr: [u8; 0x8000] = [0; 0x8000];
-    reader.read(&mut arr).expect("couldn't read file");
-
-    let mbc = Mbc::new(arr);
+    let mbc = Mbc::new(buffer);
     let mut gb = GameBoy::new(mbc);
 
     if cli.debug {
