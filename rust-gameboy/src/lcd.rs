@@ -311,7 +311,7 @@ impl Lcd {
     }
 
     pub fn extract_interupt(&mut self) -> u8 {
-        let r = self.interupt as u8;
+        let r = self.interupt;
         self.interupt = 0;
         return r;
     }
