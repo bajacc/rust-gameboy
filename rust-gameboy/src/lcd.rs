@@ -239,11 +239,11 @@ impl Lcd {
                 let x = if sprite.flip_h { i } else { 7 - i };
                 let lsb = (lsb_byte >> x) & 1;
                 let msb = (msb_byte >> x) & 1;
-                let pixel = msb * 2 + lsb;
+                let pixel = apply_palette(palette, msb * 2 + lsb);
                 let x_on_screen = sprite.x as isize + i - 8;
 
-                if 0 <= x_on_screen && x_on_screen < Lcd::WIDTH as isize {
-                    arr[x_on_screen as usize] = apply_palette(palette, pixel);
+                if 0 <= x_on_screen && x_on_screen < Lcd::WIDTH as isize && pixel != TRANSPARENT {
+                    arr[x_on_screen as usize] = pixel;
                 }
             }
         }
@@ -258,22 +258,37 @@ impl Lcd {
             for x in 0..(Lcd::WIDTH as usize) {
                 self.display[self.ly as usize * Lcd::WIDTH as usize + x] = sprite_bg[x];
             }
+        } else {
+            for x in 0..(Lcd::WIDTH as usize) {
+                self.display[self.ly as usize * Lcd::WIDTH as usize + x] = TRANSPARENT;
+            }
         }
 
-        if bit!(self.lcdc, LcdcBit::Bg) {
-            let tile_index_addr = Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::BgArea) as usize];
-            let bg_y = (self.ly as usize + self.scy as usize) & 0xff;
-
-            for x in 0..(Lcd::WIDTH as usize) {
-                let bg_x = (x + self.scx as usize) & 0xff;
-                let mut bg_pixel = self.get_pixel_bg(bg_y, bg_x, tile_index_addr);
-                bg_pixel = apply_palette(self.bgp, bg_pixel);
-                let sprite_pixel = self.display[self.ly as usize * Lcd::WIDTH as usize + x];
-                self.display[self.ly as usize * Lcd::WIDTH as usize + x] = bg_pixel;
-                if bg_pixel != TRANSPARENT || sprite_pixel == TRANSPARENT {
-                    self.display[self.ly as usize * Lcd::WIDTH as usize + x] = bg_pixel;
-                }
+        let tile_index_addr_bg = Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::BgArea) as usize];
+        let bg_y = (self.ly as usize + self.scy as usize) & 0xff;
+        let tile_index_addr_win = Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::WinArea) as usize];
+        let wx = self.wx as isize - 7;
+        for x in 0..(Lcd::WIDTH as usize) {
+            let bg_x = (x + self.scx as usize) & 0xff;
+            let mut pixel = TRANSPARENT;
+            if bit!(self.lcdc, LcdcBit::Bg) {
+                pixel = self.get_pixel_bg(bg_y, bg_x, tile_index_addr_bg);
+                pixel = apply_palette(self.bgp, pixel);
             }
+            if bit!(self.lcdc, LcdcBit::Win) && self.ly >= self.wy && x as isize >= wx {
+                let x_on_window = (x as isize - wx) as usize & 255;
+                pixel = self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr_win);
+                pixel = apply_palette(self.bgp, pixel);
+            }
+            let sprite_pixel = self.display[self.ly as usize * Lcd::WIDTH as usize + x];
+            if pixel != TRANSPARENT || sprite_pixel == TRANSPARENT {
+                self.display[self.ly as usize * Lcd::WIDTH as usize + x] = pixel;
+            }
+        }
+
+
+        if bit!(self.lcdc, LcdcBit::Win) && self.ly >= self.wy {
+            self.window_line += 1
         }
 
         if bit!(self.lcdc, LcdcBit::Obj) {
@@ -284,23 +299,6 @@ impl Lcd {
             }
         }
 
-        if bit!(self.lcdc, LcdcBit::Win) && self.ly >= self.wy {
-            let tile_index_addr = Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::WinArea) as usize];
-            let wx = self.wx as isize - 7;
-            let start = if wx < 0 { 0 } else { wx };
-
-            for x in (start as usize)..(Lcd::WIDTH as usize) {
-                let x_on_window = (x as isize - wx) as usize & 255;
-                
-                let mut win_pixel =
-                    self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr);
-                win_pixel = apply_palette(self.bgp, win_pixel);
-                if win_pixel != TRANSPARENT {
-                    self.display[self.ly as usize * Lcd::WIDTH as usize + x] = win_pixel;
-                }
-            }
-            self.window_line += 1
-        }
 
         for x in 0..(Lcd::WIDTH as usize) {
             let pixel_addr = self.ly as usize * Lcd::WIDTH as usize + x;
