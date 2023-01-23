@@ -291,7 +291,7 @@ impl Lcd {
             let start = if wx < 0 { 0 } else { wx } as usize;
 
             for x in start..(Lcd::WIDTH as usize) {
-                let x_on_window = x - wx as usize;
+                let x_on_window = (x as isize - wx) as usize & 255;
                 let mut win_pixel =
                     self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr);
                 win_pixel = apply_palette(self.bgp, win_pixel);

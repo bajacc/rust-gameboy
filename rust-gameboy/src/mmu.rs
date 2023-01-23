@@ -131,5 +131,6 @@ impl Mmu {
         self.timer.cycle();
         self.lcd.cycle();
         self.joypad.cycle();
+        self.mbc.cycle();
     }
 }
