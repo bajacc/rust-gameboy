@@ -8,6 +8,7 @@ pub struct GameBoy {
     pub mmu: Mmu,
     pub cpu: Cpu,
     pub dma: Dma,
+    pub num_cycle: u128,
 }
 
 impl GameBoy {
@@ -16,6 +17,7 @@ impl GameBoy {
             mmu: Mmu::new(mbc),
             cpu: Cpu::new(),
             dma: Dma::new(),
+            num_cycle: 0,
         }
     }
 
@@ -23,6 +25,7 @@ impl GameBoy {
         self.mmu.cycle();
         self.cpu.cycle(&mut self.mmu);
         self.dma.cycle(&mut self.mmu);
+        self.num_cycle += 1;
     }
 
     pub fn disassemble(&self, num: usize) {

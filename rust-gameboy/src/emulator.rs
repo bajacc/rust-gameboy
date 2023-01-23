@@ -29,7 +29,7 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
     let mut last_render = Instant::now();
 
     let mut renderer = Renderer::new(Lcd::HEIGHT as usize, Lcd::WIDTH as usize, 4);
-    
+
     let mut bg_renderer = Renderer::new(256, 256, 1);
     let mut bg_renderer2 = Renderer::new(256, 256, 1);
     let mut tile_renderer = Renderer::new(192, 128, 1);
@@ -65,7 +65,6 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
             tile_renderer.render(&tile_buffer);
         }
         renderer.render_u8(&gb.mmu.lcd.display);
-        
 
         let elapsed = last_render.elapsed();
         if elapsed < RENDER_DURATION {

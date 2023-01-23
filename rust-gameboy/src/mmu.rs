@@ -71,6 +71,7 @@ impl Mmu {
             }
             0x0100..=0x7fff => self.mbc.read(addr),
             0x8000..=0x9fff => self.lcd.read(addr),
+            0xa000..=0xbfff => self.mbc.read(addr),
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000],
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000],
             0xfe00..=0xfe9f => self.lcd.read(addr),
@@ -91,6 +92,7 @@ impl Mmu {
         match addr {
             0x0000..=0x7fff => self.mbc.write(addr, value),
             0x8000..=0x9fff => self.lcd.write(addr, value),
+            0xa000..=0xbfff => self.mbc.write(addr, value),
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000] = value,
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000] = value,
             0xfe00..=0xfe9f => self.lcd.write(addr, value),

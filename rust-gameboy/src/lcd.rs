@@ -277,7 +277,8 @@ impl Lcd {
             }
             if bit!(self.lcdc, LcdcBit::Win) && self.ly >= self.wy && x as isize >= wx {
                 let x_on_window = (x as isize - wx) as usize & 255;
-                pixel = self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr_win);
+                pixel =
+                    self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr_win);
                 pixel = apply_palette(self.bgp, pixel);
             }
             let sprite_pixel = self.display[self.ly as usize * Lcd::WIDTH as usize + x];
@@ -285,7 +286,6 @@ impl Lcd {
                 self.display[self.ly as usize * Lcd::WIDTH as usize + x] = pixel;
             }
         }
-
 
         if bit!(self.lcdc, LcdcBit::Win) && self.ly >= self.wy {
             self.window_line += 1
@@ -298,7 +298,6 @@ impl Lcd {
                 }
             }
         }
-
 
         for x in 0..(Lcd::WIDTH as usize) {
             let pixel_addr = self.ly as usize * Lcd::WIDTH as usize + x;
