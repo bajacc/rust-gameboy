@@ -126,8 +126,8 @@ impl Lcd {
             0xff47 => self.bgp,
             0xff48 => self.obp0,
             0xff49 => self.obp1,
-            0xff4a => self.wx,
-            0xff4b => self.wy,
+            0xff4a => self.wy,
+            0xff4b => self.wx,
             _ => panic!("0x{:04x}", addr),
         }
     }
@@ -158,8 +158,8 @@ impl Lcd {
             0xff47 => self.bgp = value,
             0xff48 => self.obp0 = value,
             0xff49 => self.obp1 = value,
-            0xff4a => self.wx = value,
-            0xff4b => self.wy = value,
+            0xff4a => self.wy = value,
+            0xff4b => self.wx = value,
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
         }
     }
@@ -284,14 +284,14 @@ impl Lcd {
             }
         }
 
-        let wy = self.wy as isize;
-        if bit!(self.lcdc, LcdcBit::Win) && self.ly as isize >= wy {
+        if bit!(self.lcdc, LcdcBit::Win) && self.ly >= self.wy {
             let tile_index_addr = Lcd::TILE_INDEX_ADDR[bit!(self.lcdc, LcdcBit::WinArea) as usize];
             let wx = self.wx as isize - 7;
-            let start = if wx < 0 { 0 } else { wx } as usize;
+            let start = if wx < 0 { 0 } else { wx };
 
-            for x in start..(Lcd::WIDTH as usize) {
+            for x in (start as usize)..(Lcd::WIDTH as usize) {
                 let x_on_window = (x as isize - wx) as usize & 255;
+                
                 let mut win_pixel =
                     self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr);
                 win_pixel = apply_palette(self.bgp, win_pixel);

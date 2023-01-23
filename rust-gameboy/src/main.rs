@@ -45,6 +45,10 @@ struct Cli {
 
     #[arg(short, long, default_value_t = 1f64)]
     speed: f64,
+
+    // display background and window
+    #[arg(short, long)]
+    background: bool,
 }
 
 // todo: use clap to give more option at launch
@@ -61,6 +65,6 @@ fn main() {
     if cli.debug {
         Debugger::new(gb).run();
     } else {
-        emulator::run(&mut gb, cli.speed);
+        emulator::run(&mut gb, cli.speed, cli.background);
     }
 }

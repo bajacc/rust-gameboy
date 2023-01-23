@@ -25,10 +25,16 @@ const RENDER_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 60);
 
 const CYCLE_BETWEEN_RENDER: u128 = RENDER_DURATION.as_nanos() / CYCLE_DURATION.as_nanos();
 
-pub fn run(gb: &mut GameBoy, speed: f64) {
+pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
     let mut last_render = Instant::now();
 
     let mut renderer = Renderer::new(Lcd::HEIGHT as usize, Lcd::WIDTH as usize, 4);
+    
+    let mut bg_renderer = Renderer::new(256, 256, 1);
+    let mut bg_renderer2 = Renderer::new(256, 256, 1);
+    let mut tile_renderer = Renderer::new(192, 128, 1);
+    let mut bg_buffer: [u32; 256 * 256] = [0; 256 * 256];
+    let mut tile_buffer: [u32; 192 * 128] = [0; 192 * 128];
 
     let cycle_between_render = (CYCLE_BETWEEN_RENDER as f64 * speed) as u128;
 
@@ -50,8 +56,16 @@ pub fn run(gb: &mut GameBoy, speed: f64) {
         while gb.mmu.lcd.get_mode() != 1 {
             gb.cycle();
         }
-
+        if background {
+            gb.mmu.lcd.get_background(&mut bg_buffer, false);
+            bg_renderer.render(&bg_buffer);
+            gb.mmu.lcd.get_background(&mut bg_buffer, true);
+            bg_renderer2.render(&bg_buffer);
+            gb.mmu.lcd.get_tiles(&mut tile_buffer);
+            tile_renderer.render(&tile_buffer);
+        }
         renderer.render_u8(&gb.mmu.lcd.display);
+        
 
         let elapsed = last_render.elapsed();
         if elapsed < RENDER_DURATION {
