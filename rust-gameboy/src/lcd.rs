@@ -72,10 +72,7 @@ macro_rules! bit {
 
 const TRANSPARENT: u8 = 0xff;
 
-fn apply_palette(palette: u8, color: u8) -> u8 {
-    if color == 0 {
-        return TRANSPARENT;
-    }
+fn apply_palette(palette: u8, mut color: u8) -> u8 {
     return (palette >> (color * 2)) & 0x3;
 }
 
@@ -239,7 +236,8 @@ impl Lcd {
                 let x = if sprite.flip_h { i } else { 7 - i };
                 let lsb = (lsb_byte >> x) & 1;
                 let msb = (msb_byte >> x) & 1;
-                let pixel = apply_palette(palette, msb * 2 + lsb);
+                let mut pixel = msb * 2 + lsb;
+                pixel = if pixel == 0 {TRANSPARENT} else {apply_palette(palette, pixel)};
                 let x_on_screen = sprite.x as isize + i - 8;
 
                 if 0 <= x_on_screen && x_on_screen < Lcd::WIDTH as isize && pixel != TRANSPARENT {
@@ -274,12 +272,18 @@ impl Lcd {
             if bit!(self.lcdc, LcdcBit::Bg) {
                 pixel = self.get_pixel_bg(bg_y, bg_x, tile_index_addr_bg);
                 pixel = apply_palette(self.bgp, pixel);
+                if pixel == 0 {
+                    pixel = TRANSPARENT;
+                }
             }
             if bit!(self.lcdc, LcdcBit::Win) && self.ly >= self.wy && x as isize >= wx {
                 let x_on_window = (x as isize - wx) as usize & 255;
                 pixel =
                     self.get_pixel_bg(self.window_line as usize, x_on_window, tile_index_addr_win);
                 pixel = apply_palette(self.bgp, pixel);
+                if pixel == 0 {
+                    pixel = TRANSPARENT;
+                }
             }
             let sprite_pixel = self.display[self.ly as usize * Lcd::WIDTH as usize + x];
             if pixel != TRANSPARENT || sprite_pixel == TRANSPARENT {
