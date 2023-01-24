@@ -19,13 +19,13 @@ Rust Gameboy is a open source Game Boy (GB) written in rust. It has a minibf fro
 - interupts
 - joypad
 - lcd controller
+- cartridges with Mbc1, Mbc2, Mbc3
 
 ### Not Implemented
 
 - sound
 - Game Boy color features
 - choice of palette
-- debugger *!work in progress!*
 - automatic blargg tests for CI
 
 Note that the cpu and interups blaggs tests pass on this emulator when tested manually.
@@ -58,8 +58,8 @@ cargo run --bin codegenerator
 
 ## Source
 
-gameboy manual: http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
+GameBoy manual: http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
 
 opcodes.json: https://gbdev.io/gb-opcodes//optables/
 
-Tutorial gameboy emulator in java: https://cs108.epfl.ch/archive/18/p/00_introduction.html
+GameBoy wiki: https://gbdev.gg8.se/wiki/articles/Main_Page
