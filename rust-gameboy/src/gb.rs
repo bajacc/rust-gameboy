@@ -1,3 +1,7 @@
+use std::fs::File;
+use std::io::Read;
+use std::path::PathBuf;
+
 use crate::cpu::Cpu;
 use crate::desassembler::disassemble;
 use crate::dma::Dma;
@@ -19,6 +23,15 @@ impl GameBoy {
             dma: Dma::new(),
             num_cycle: 0,
         }
+    }
+
+    pub fn from_path(path: PathBuf) -> Self {
+        let mut f = File::open(path).expect("couldn't read file");
+        let mut buffer = Vec::new();
+        f.read_to_end(&mut buffer).expect("couldn't read file");
+
+        let mbc = Mbc::new(buffer);
+        return GameBoy::new(mbc);
     }
 
     pub fn cycle(&mut self) {

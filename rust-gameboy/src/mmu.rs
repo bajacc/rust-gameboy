@@ -42,6 +42,8 @@ pub struct Mmu {
     pub timer: Timer,
     pub lcd: Lcd,
     pub joypad: Joypad,
+
+    pub serial_data: Option<u8>,
 }
 
 impl Mmu {
@@ -57,6 +59,7 @@ impl Mmu {
             timer: Timer::new(),
             lcd: Lcd::new(),
             joypad: Joypad::new(),
+            serial_data: None,
         }
     }
 
@@ -78,7 +81,7 @@ impl Mmu {
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80],
 
             0xff00 => self.joypad.read(addr),
-            0xff01 => NO_DATA, // stdout
+            0xff01 => NO_DATA, // serial transfert data
             0xff04..=0xff07 => self.timer.read(addr),
             0xff40..=0xff4b => self.lcd.read(addr),
 
@@ -99,10 +102,7 @@ impl Mmu {
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80] = value,
 
             0xff00 => self.joypad.write(addr, value),
-            0xff01 => {
-                print!("{}", value as char);
-                io::stdout().flush().unwrap();
-            }
+            0xff01 => self.serial_data = Some(value),
             0xff04..=0xff07 => self.timer.write(addr, value),
             0xff40..=0xff4b => self.lcd.write(addr, value),
 
@@ -111,6 +111,12 @@ impl Mmu {
             0xffff => self.interupt_enable = value & (Interupt::Mask as u8),
             _ => (),
         }
+    }
+
+    pub fn extract_serial_data(&mut self) -> Option<u8> {
+        let r = self.serial_data;
+        self.serial_data = None;
+        return r;
     }
 
     pub fn read16(&self, addr: u16) -> u16 {

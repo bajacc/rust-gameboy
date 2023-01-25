@@ -1,4 +1,5 @@
 mod alu;
+mod blargg_test;
 mod cpu;
 mod debugger;
 mod desassembler;
@@ -55,12 +56,7 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let mut f = File::open(cli.path).expect("couldn't read file");
-    let mut buffer = Vec::new();
-    f.read_to_end(&mut buffer).expect("couldn't read file");
-
-    let mbc = Mbc::new(buffer);
-    let mut gb = GameBoy::new(mbc);
+    let mut gb = GameBoy::from_path(cli.path);
 
     if cli.debug {
         Debugger::new(gb).run();
