@@ -28,19 +28,13 @@ const CYCLE_BETWEEN_RENDER: u128 = RENDER_DURATION.as_nanos() / CYCLE_DURATION.a
 pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
     let mut last_render = Instant::now();
 
-    let mut renderer = Renderer::new(Lcd::HEIGHT as usize, Lcd::WIDTH as usize, 4);
-
-    let mut bg_renderer = Renderer::new(256, 256, 1);
-    let mut bg_renderer2 = Renderer::new(256, 256, 1);
-    let mut tile_renderer = Renderer::new(192, 128, 1);
-    let mut bg_buffer: [u32; 256 * 256] = [0; 256 * 256];
-    let mut tile_buffer: [u32; 192 * 128] = [0; 192 * 128];
+    let mut renderer = Renderer::new(background, background);
 
     let cycle_between_render = (CYCLE_BETWEEN_RENDER as f64 * speed) as u128;
 
-    while renderer.window.is_open() && !renderer.window.is_key_down(Key::Escape) {
+    while renderer.lcd_window.is_open() && !renderer.lcd_window.is_key_down(Key::Escape) {
         for (minifb_key, gb_key) in KEY_MAP {
-            if renderer.window.is_key_down(minifb_key) {
+            if renderer.lcd_window.is_key_down(minifb_key) {
                 gb.mmu.joypad.press_key(gb_key);
             } else {
                 gb.mmu.joypad.release_key(gb_key);
@@ -56,15 +50,7 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
         while gb.mmu.lcd.get_mode() != 1 {
             gb.cycle();
         }
-        if background {
-            gb.mmu.lcd.get_background(&mut bg_buffer, false);
-            bg_renderer.render(&bg_buffer);
-            gb.mmu.lcd.get_background(&mut bg_buffer, true);
-            bg_renderer2.render(&bg_buffer);
-            gb.mmu.lcd.get_tiles(&mut tile_buffer);
-            tile_renderer.render(&tile_buffer);
-        }
-        renderer.render_u8(&gb.mmu.lcd.display);
+        renderer.render(&gb);
 
         let elapsed = last_render.elapsed();
         if elapsed < RENDER_DURATION {
