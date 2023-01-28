@@ -2,10 +2,8 @@ use crate::cpu::Interupt;
 use crate::joypad::Joypad;
 use crate::lcd::Lcd;
 use crate::mbc::Mbc;
+use crate::sound::Sound;
 use crate::timer::Timer;
-
-use std::io;
-use std::io::Write;
 
 const BOOT_ROM: [u8; 256] = [
     0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
@@ -42,6 +40,7 @@ pub struct Mmu {
     pub timer: Timer,
     pub lcd: Lcd,
     pub joypad: Joypad,
+    pub sound: Sound,
 
     pub serial_data: Option<u8>,
 }
@@ -59,6 +58,7 @@ impl Mmu {
             timer: Timer::new(),
             lcd: Lcd::new(),
             joypad: Joypad::new(),
+            sound: Sound::new(),
             serial_data: None,
         }
     }
@@ -78,6 +78,7 @@ impl Mmu {
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000],
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000],
             0xfe00..=0xfe9f => self.lcd.read(addr),
+            0xff10..=0xff3f => self.sound.read(addr), // todo more address
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80],
 
             0xff00 => self.joypad.read(addr),
@@ -99,6 +100,7 @@ impl Mmu {
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000] = value,
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000] = value,
             0xfe00..=0xfe9f => self.lcd.write(addr, value),
+            0xff10..=0xff3f => self.sound.write(addr, value),
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80] = value,
 
             0xff00 => self.joypad.write(addr, value),
@@ -140,5 +142,6 @@ impl Mmu {
         self.lcd.cycle();
         self.joypad.cycle();
         self.mbc.cycle();
+        self.sound.cycle();
     }
 }

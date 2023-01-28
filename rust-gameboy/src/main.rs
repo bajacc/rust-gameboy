@@ -14,6 +14,7 @@ mod opcodes;
 mod opcodes_const;
 mod renderer;
 mod timer;
+mod sound;
 
 use debugger::Debugger;
 use std::path::{Path, PathBuf};
