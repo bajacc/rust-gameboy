@@ -3,11 +3,6 @@ use std::ops::Deref;
 use crate::mmu;
 
 #[derive(Default)]
-pub struct Sound {
-    wave: Wave,
-}
-
-#[derive(Default)]
 struct Wave {
     enable: bool,
     dac_power: bool,
@@ -21,7 +16,13 @@ struct Wave {
     len_counter: usize,
 
     position: usize,
-    sample: u8
+    pub output: u8
+}
+
+macro_rules! bit {
+    ($x:expr, $pos:expr) => {
+        ($x & (1 << ($pos as u8))) != 0
+    };
 }
 
 impl Wave {
@@ -38,16 +39,16 @@ impl Wave {
             self.reset_counter();
             self.position = (self.position + 1) % (self.ram.len() * 2);
 
-            self.sample = self.ram[self.position / 2];
-            self.sample >>= (self.position & 1) * 4;
-            self.sample &= 0x0f;
+            self.output = self.ram[self.position / 2];
+            self.output >>= (self.position & 1) * 4;
+            self.output &= 0x0f;
 
-            self.sample >>= Wave::VOLUME_SHIFT[self.volume as usize];
+            self.output >>= Wave::VOLUME_SHIFT[self.volume as usize];
         }
 
         if self.len_counter == 0 && self.nr34 & 0x40 != 0 {
             self.enable = false;
-            self.sample = 0;
+            self.output = 0;
         }
 
         if self.counter != 0 {
@@ -114,6 +115,30 @@ impl Wave {
     }
 }
 
+enum Nr51 {
+    Sound4ToSo2 = 7,
+    Sound3ToSo2 = 6,
+    Sound2ToSo2 = 5,
+    Sound1ToSo2 = 4,
+    Sound4ToSo1 = 3,
+    Sound3ToSo1 = 2,
+    Sound2ToSo1 = 1,
+    Sound1ToSo1 = 0,
+}
+
+#[derive(Default)]
+pub struct Sound {
+    wave: Wave,
+
+    nr50: u8,
+    nr51: u8,
+    enable: bool,
+    so1_volume: u8,
+    so2_volume: u8,
+
+    pub so1_output: u8,
+    pub so2_output: u8,
+}
 
 impl Sound {
     pub fn new() -> Self {
@@ -122,21 +147,48 @@ impl Sound {
 
     pub fn cycle(&mut self) {
         self.wave.cycle();
+
+        self.nr51 = 0;
+        if bit!(self.nr51, Nr51::Sound3ToSo1) {
+            self.so1_output += self.wave.output;
+        }
+        if bit!(self.nr51, Nr51::Sound3ToSo2) {
+            self.so2_output += self.wave.output;
+        }
+
+        self.so1_output *= self.so1_volume + 1;
+        self.so2_output *= self.so2_volume + 1;
+    }
+
+    fn set_nr50(&mut self, v: u8) {
+        self.nr50 = v;
+        self.so1_volume = v & 0x07;
+        self.so2_volume = (v >> 4) & 0x07;
+    }
+
+    fn get_nr52(&self) -> u8 {
+        return (self.enable as u8) << 7 | (self.wave.enable as u8) << 2;
     }
 
     pub fn read(&self, addr: u16) -> u8 {
         match addr {
             0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.read(addr),
+            0xff24 => self.nr50,
+            0xff25 => self.nr51,
+            0xff26 => self.get_nr52(),
             0xff27..=0xff2f => mmu::NO_DATA,
-            _ => panic!("0x{:04x}", addr),
+            _ => mmu::NO_DATA,
         }
     }
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
             0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.write(addr, value),
+            0xff24 => self.set_nr50(value),
+            0xff25 => self.nr51 = value,
+            0xff26 => self.enable = value & 0x80 != 0,
             0xff27..=0xff2f => (),
-            _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
+            _ => (),
         }
     }
 }
