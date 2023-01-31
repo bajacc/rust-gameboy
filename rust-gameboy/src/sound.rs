@@ -1,5 +1,3 @@
-use std::ops::Deref;
-
 use crate::mmu;
 
 #[derive(Default)]
@@ -133,11 +131,11 @@ pub struct Sound {
     nr50: u8,
     nr51: u8,
     enable: bool,
-    so1_volume: u8,
-    so2_volume: u8,
+    so1_volume: u16,
+    so2_volume: u16,
 
-    pub so1_output: u8,
-    pub so2_output: u8,
+    pub so1_output: u16,
+    pub so2_output: u16,
 }
 
 impl Sound {
@@ -145,15 +143,15 @@ impl Sound {
         Sound::default()
     }
 
-    pub fn cycle(&mut self) {
+    pub fn cycle2(&mut self) {
         self.wave.cycle();
 
         self.nr51 = 0;
         if bit!(self.nr51, Nr51::Sound3ToSo1) {
-            self.so1_output += self.wave.output;
+            self.so1_output += self.wave.output as u16;
         }
         if bit!(self.nr51, Nr51::Sound3ToSo2) {
-            self.so2_output += self.wave.output;
+            self.so2_output += self.wave.output as u16;
         }
 
         self.so1_output *= self.so1_volume + 1;
@@ -162,8 +160,8 @@ impl Sound {
 
     fn set_nr50(&mut self, v: u8) {
         self.nr50 = v;
-        self.so1_volume = v & 0x07;
-        self.so2_volume = (v >> 4) & 0x07;
+        self.so1_volume = (v & 0x07) as u16;
+        self.so2_volume = ((v >> 4) & 0x07) as u16;
     }
 
     fn get_nr52(&self) -> u8 {

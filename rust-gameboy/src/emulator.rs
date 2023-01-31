@@ -2,7 +2,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::gb::GameBoy;
-use crate::joypad;
+use crate::speaker::Speaker;
+use crate::{joypad, speaker};
 
 use crate::lcd::Lcd;
 use crate::renderer::Renderer;
@@ -29,6 +30,7 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
     let mut last_render = Instant::now();
 
     let mut renderer = Renderer::new(background, background);
+    let speaker = Speaker::new(&mut gb.mmu.sound);
 
     let cycle_between_render = (CYCLE_BETWEEN_RENDER as f64 * speed) as u128;
 

@@ -15,25 +15,22 @@ mod opcodes_const;
 mod renderer;
 mod timer;
 mod sound;
+mod speaker;
+use rodio::buffer::SamplesBuffer;
 
 use debugger::Debugger;
-use std::path::{Path, PathBuf};
-use std::thread;
-use std::time::{Duration, Instant};
+use speaker::Speaker;
+use std::path::PathBuf;
 
 use gb::GameBoy;
-use mbc::Mbc;
-
-use std::env;
-use std::fs::File;
-use std::io::BufReader;
-use std::io::Read;
 
 use crate::lcd::Lcd;
-use crate::renderer::Renderer;
-use minifb::Key;
 
 use clap::Parser;
+
+use std::time::Duration;
+use rodio::{Decoder, OutputStream, Sink, source};
+use rodio::source::{SineWave, Source};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -58,6 +55,8 @@ fn main() {
     let cli = Cli::parse();
 
     let mut gb = GameBoy::from_path(cli.path);
+
+
 
     if cli.debug {
         Debugger::new(gb).run();

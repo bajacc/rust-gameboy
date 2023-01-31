@@ -10,3 +10,4 @@ clap = { version = "4.1.1", features = ["derive"] }
 minifb = "0.23"
 rustyline = "10.1.0"
 rstest = "0.16.0"
+rodio = "0.16.0"
