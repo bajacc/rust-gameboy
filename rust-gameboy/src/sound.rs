@@ -1,5 +1,95 @@
 use crate::mmu;
 
+macro_rules! bit {
+    ($x:expr, $pos:expr) => {
+        ($x & (1 << ($pos as u8))) != 0
+    };
+}
+
+// Step   Length Ctr  Vol Env     Sweep
+// ---------------------------------------
+// 0      Clock       -           -
+// 1      -           -           -
+// 2      Clock       -           Clock
+// 3      -           -           -
+// 4      Clock       -           -
+// 5      -           -           -
+// 6      Clock       -           Clock
+// 7      -           Clock       -
+// ---------------------------------------
+// Rate   256 Hz      64 Hz       128 Hz
+#[derive(Default)]
+struct FrameSequencer {
+    pub length_ctr: bool,
+    pub vol_env: bool,
+    pub sweep: bool,
+    counter: usize,
+}
+
+const CYCLE_PER_SECOND: usize = 1 << 20;
+const CYCLE_PER_512HZ: usize = CYCLE_PER_SECOND / 512;
+
+impl FrameSequencer {
+    pub fn cycle(&mut self) {
+        self.length_ctr = false;
+        self.vol_env = false;
+        self.sweep = false;
+
+        self.counter += 1;
+
+        if self.counter % CYCLE_PER_512HZ != 0 {
+            return;
+        }
+
+        let step = self.counter / CYCLE_PER_512HZ;
+        if step == 8 {
+            self.counter = 0;
+        }
+
+        if step % 2 == 0 {
+            self.length_ctr = true;
+        }
+        if step == 7 {
+            self.vol_env = true;
+        }
+        if step == 2 || step == 6 {
+            self.sweep = true;
+        }
+    }
+}
+
+#[derive(Default)]
+struct Envelope {
+    pub volume: u8,
+    pub period: u8,
+    pub increment: bool,
+    period_counter: u8,
+}
+
+impl Envelope {
+    pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
+        if !frame_sequencer.vol_env || self.period == 0 {
+            return;
+        }
+
+        if self.period_counter != 0 {
+            self.period_counter -= 1;
+        }
+
+        match self.increment {
+            false if self.volume > 0 => self.volume -= 1,
+            true if self.volume < 0xf => self.volume += 1,
+            _ => ()
+        }
+    }
+
+    pub fn set_nrx2(&mut self, value: u8) {
+        self.volume = value >> 4;
+        self.period = value & 0x7;
+        self.increment = bit!(value, 3);
+    }
+}
+
 #[derive(Default)]
 struct Wave {
     enable: bool,
@@ -14,46 +104,39 @@ struct Wave {
     len_counter: usize,
 
     position: usize,
-    pub output: u8
-}
-
-macro_rules! bit {
-    ($x:expr, $pos:expr) => {
-        ($x & (1 << ($pos as u8))) != 0
-    };
+    pub output: f32
 }
 
 impl Wave {
     const VOLUME_SHIFT: [u8; 4] = [4, 0, 1, 2];
-    const LEN_SHIFT: u8 = 20 - 8; // 2^20 / 2^8 length per cycles
 
-    pub fn cycle(&mut self) {
+    pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
 
         if !self.enable {
             return;
-        }
-
-        if self.counter == 0 {
-            self.reset_counter();
-            self.position = (self.position + 1) % (self.ram.len() * 2);
-
-            self.output = self.ram[self.position / 2];
-            self.output >>= (self.position & 1) * 4;
-            self.output &= 0x0f;
-
-            self.output >>= Wave::VOLUME_SHIFT[self.volume as usize];
-        }
-
-        if self.len_counter == 0 && self.nr34 & 0x40 != 0 {
-            self.enable = false;
-            self.output = 0;
-        }
+        }        
 
         if self.counter != 0 {
             self.counter -= 1;
+            if self.counter == 0 {
+                self.reset_counter();
+                self.position = (self.position + 1) % (self.ram.len() * 2);
+                
+                let mut output = self.ram[self.position / 2];
+                output >>= (self.position & 1) * 4;
+                output &= 0x0f;
+                output >>= Wave::VOLUME_SHIFT[self.volume as usize];
+
+                self.output = (output as f32 / 7.5) - 1.0;
+            }
         }
-        if self.len_counter != 0 {
+
+        if frame_sequencer.length_ctr && self.len_counter != 0 {
             self.len_counter -= 1;
+            if self.len_counter == 0 && self.nr34 & 0x40 != 0 {
+                self.enable = false;
+                self.output = 0.0;
+            }
         }
     }
 
@@ -64,7 +147,7 @@ impl Wave {
 
         self.enable = true;
         if self.len_counter == 0 {
-            self.len_counter = (246 - self.length as usize) << Wave::LEN_SHIFT;
+            self.len_counter = 256 - self.length as usize;
         }
         self.reset_counter();
         self.position = 0;
@@ -76,7 +159,7 @@ impl Wave {
         // period = (4194304 / freq) in s
 
         // period in cycle
-        self.counter = 2 * (1 << 20) * (2048 - x); // todo: mutiply by 2 or 64?
+        self.counter = 2 * (2048 - x); // todo: mutiply by 2 or 64?
     }
 
     pub fn read(&self, addr: u16) -> u8 {
@@ -105,9 +188,122 @@ impl Wave {
             0xff1e => {
                 self.nr34 = value;
                 self.check_trigger();
-
             }
             0xff30..=0xff3f => self.ram[addr as usize - 0xff30] = value,
+            _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
+        }
+    }
+}
+
+
+#[derive(Default)]
+struct Square2 {
+    envelope: Envelope,
+    enable: bool,
+    dac_power: bool,
+    nr21: u8,
+    nr22: u8,
+    nr23: u8,
+    nr24: u8,
+
+    counter: usize,
+    len_counter: usize,
+
+    position: usize,
+    pub output: f32
+}
+
+impl Square2 {
+
+    const WAVEFORM: [[u8; 8]; 4] = [
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 0, 0, 0, 1, 1, 1],
+        [0, 1, 1, 1, 1, 1, 1, 0],
+    ];
+
+    pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
+        self.envelope.cycle(frame_sequencer);
+
+        if !self.enable {
+            return;
+        }
+
+        if self.counter != 0 {
+            self.counter -= 1;
+            if self.counter == 0 {
+                self.reset_counter();
+                
+                let duty = self.nr21 >> 6;
+
+                let mut output = Square2::WAVEFORM[duty as usize][self.position];
+                output *= self.envelope.volume;
+                
+                self.position = (self.position + 1) % 8;
+                self.output = (output as f32 / 7.5) - 1.0;
+            }
+        }
+
+        if frame_sequencer.length_ctr && self.len_counter != 0 {
+            self.len_counter -= 1;
+            if self.len_counter == 0 && self.nr24 & 0x40 != 0 {
+                self.enable = false;
+                self.output = 0.0;
+            }
+        }
+    }
+
+    fn check_trigger(&mut self) {
+        if self.nr24 & 0x80 == 0 {
+            return;
+        }
+
+        self.enable = true;
+        if self.len_counter == 0 {
+            let length = self.nr21 & 0x3f;
+            self.len_counter = 64 - length as usize;
+        }
+        self.reset_counter();
+    }
+
+    fn reset_counter(&mut self) {
+        let x = self.nr23 as usize | (self.nr24 as usize & 7) << 8;
+        // freq = 65536/(2048 - x) in Hz
+        // period = (4194304 / freq) in s
+
+        // period in cycle
+        self.counter = 4 * (2048 - x); // todo: mutiply by 2 or 64?
+    }
+
+    pub fn read(&self, addr: u16) -> u8 {
+        match addr {
+            0xff15 => (self.dac_power as u8) << 7,
+            0xff16 => self.nr21,
+            0xff17 => self.nr22,
+            0xff18 => self.nr23,
+            0xff19 => self.nr24,
+            _ => panic!("0x{:04x}", addr),
+        }
+    }
+
+    pub fn write(&mut self, addr: u16, value: u8) {
+        match addr {
+            0xff15 => {
+                self.dac_power = value & 0x80 != 0;
+                if !self.dac_power {
+                    self.enable = false;
+                }
+            }
+            0xff16 => self.nr21 = value,
+            0xff17 => {
+                self.nr22 = value;
+                self.envelope.set_nrx2(value);
+            },
+            0xff18 => self.nr23 = value,
+            0xff19 => {
+                self.nr24 = value;
+                self.check_trigger();
+            }
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
         }
     }
@@ -126,7 +322,9 @@ enum Nr51 {
 
 #[derive(Default)]
 pub struct Sound {
+    frame_sequencer: FrameSequencer,
     wave: Wave,
+    square2: Square2,
 
     nr50: u8,
     nr51: u8,
@@ -134,8 +332,8 @@ pub struct Sound {
     so1_volume: u16,
     so2_volume: u16,
 
-    pub so1_output: u16,
-    pub so2_output: u16,
+    pub so1_output: f32,
+    pub so2_output: f32,
 }
 
 impl Sound {
@@ -143,19 +341,31 @@ impl Sound {
         Sound::default()
     }
 
-    pub fn cycle2(&mut self) {
-        self.wave.cycle();
+    pub fn cycle(&mut self) {
+        self.frame_sequencer.cycle();
+        self.wave.cycle(&self.frame_sequencer);
+        self.square2.cycle(&self.frame_sequencer);
 
-        self.nr51 = 0;
+        self.so1_output = 0.0;
+        self.so2_output = 0.0;
         if bit!(self.nr51, Nr51::Sound3ToSo1) {
-            self.so1_output += self.wave.output as u16;
+            self.so1_output += self.wave.output;
         }
         if bit!(self.nr51, Nr51::Sound3ToSo2) {
-            self.so2_output += self.wave.output as u16;
+            self.so2_output += self.wave.output;
+        }
+        if bit!(self.nr51, Nr51::Sound2ToSo1) {
+            self.so1_output += self.square2.output;
+        }
+        if bit!(self.nr51, Nr51::Sound2ToSo2) {
+            self.so2_output += self.square2.output;
         }
 
-        self.so1_output *= self.so1_volume + 1;
-        self.so2_output *= self.so2_volume + 1;
+        self.so1_output /= 4.0;
+        self.so2_output /= 4.0;
+
+        self.so1_output *= self.so1_volume as f32 + 1.0;
+        self.so2_output *= self.so2_volume as f32 + 1.0;
     }
 
     fn set_nr50(&mut self, v: u8) {
@@ -165,11 +375,12 @@ impl Sound {
     }
 
     fn get_nr52(&self) -> u8 {
-        return (self.enable as u8) << 7 | (self.wave.enable as u8) << 2;
+        return (self.enable as u8) << 7 | (self.wave.enable as u8) << 2 | (self.square2.enable as u8) << 1;
     }
 
     pub fn read(&self, addr: u16) -> u8 {
         match addr {
+            0xff15..=0xff19 => self.square2.read(addr),
             0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.read(addr),
             0xff24 => self.nr50,
             0xff25 => self.nr51,
@@ -181,6 +392,7 @@ impl Sound {
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
+            0xff15..=0xff19 => self.square2.write(addr, value),
             0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.write(addr, value),
             0xff24 => self.set_nr50(value),
             0xff25 => self.nr51 = value,

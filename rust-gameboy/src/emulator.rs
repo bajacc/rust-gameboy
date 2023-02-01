@@ -5,7 +5,6 @@ use crate::gb::GameBoy;
 use crate::speaker::Speaker;
 use crate::{joypad, speaker};
 
-use crate::lcd::Lcd;
 use crate::renderer::Renderer;
 use minifb::Key;
 
@@ -30,7 +29,7 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
     let mut last_render = Instant::now();
 
     let mut renderer = Renderer::new(background, background);
-    let speaker = Speaker::new(&mut gb.mmu.sound);
+    let mut speaker = Speaker::new();
 
     let cycle_between_render = (CYCLE_BETWEEN_RENDER as f64 * speed) as u128;
 
@@ -45,12 +44,20 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
 
         for _ in 0..cycle_between_render {
             gb.cycle();
+            if let Some(c) = gb.mmu.serial_data {
+                print!("{}", c as char);
+            }
+            speaker.update(gb);
         }
 
         // wait for the display to be drawn to avoid half drawn window
         // todo make the number of cycle per loop constant
         while gb.mmu.lcd.get_mode() != 1 {
             gb.cycle();
+            if let Some(c) = gb.mmu.serial_data {
+                print!("{}", c as char);
+            }
+            speaker.update(gb);
         }
         renderer.render(&gb);
 

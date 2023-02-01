@@ -56,8 +56,6 @@ fn main() {
 
     let mut gb = GameBoy::from_path(cli.path);
 
-
-
     if cli.debug {
         Debugger::new(gb).run();
     } else {
