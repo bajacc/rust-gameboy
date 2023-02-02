@@ -63,6 +63,7 @@ struct Envelope {
     pub volume: u8,
     pub period: u8,
     pub increment: bool,
+    pub nrx2: u8,
     period_counter: u8,
 }
 
@@ -93,11 +94,13 @@ impl Envelope {
         self.volume = value >> 4;
         self.period = value & 0x7;
         self.increment = bit!(value, 3);
+        self.nrx2 = value;
     }
 }
 
 #[derive(Default)]
 struct Sweep {
+    pub nr10: u8,
     pub shift: u8,
     pub period: u8,
     pub increment: bool,
@@ -109,7 +112,7 @@ struct Sweep {
 
 impl Sweep {
     pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
-        if !frame_sequencer.vol_env {
+        if !frame_sequencer.vol_env && self.enable {
             return;
         }
 
@@ -147,6 +150,7 @@ impl Sweep {
     }
 
     pub fn set_nr10(&mut self, value: u8) {
+        self.nr10 = value;
         self.period = (value >> 4) & 0x7;
         self.shift = value & 0x7;
         self.increment = !bit!(value, 3);
@@ -194,7 +198,7 @@ impl Wave {
         if self.counter != 0 {
             self.counter -= 1;
             if self.counter == 0 {
-                self.reset_counter();
+                self.counter = self.period();
                 self.position = (self.position + 1) % (self.ram.len() * 2);
                 
                 let mut output = self.ram[self.position / 2];
@@ -215,7 +219,7 @@ impl Wave {
         }
     }
 
-    fn check_trigger(&mut self) {
+    fn trigger(&mut self) {
         if self.nr34 & 0x80 == 0 {
             return;
         }
@@ -224,17 +228,13 @@ impl Wave {
         if self.len_counter == 0 {
             self.len_counter = 256 - self.length as usize;
         }
-        self.reset_counter();
+        self.counter = self.period();
         self.position = 0;
     }
 
-    fn reset_counter(&mut self) {
+    fn period(&mut self) -> usize {
         let x = self.nr33 as usize | (self.nr34 as usize & 7) << 8;
-        // freq = 65536/(2048 - x) in Hz
-        // period = (4194304 / freq) in s
-
-        // period in cycle
-        self.counter = 2 * (2048 - x); // todo: mutiply by 2 or 64?
+        return 2 * (2048 - x);
     }
 
     pub fn read(&self, addr: u16) -> u8 {
@@ -262,7 +262,7 @@ impl Wave {
             0xff1d => self.nr33 = value,
             0xff1e => {
                 self.nr34 = value;
-                self.check_trigger();
+                self.trigger();
             }
             0xff30..=0xff3f => self.ram[addr as usize - 0xff30] = value,
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
@@ -272,12 +272,11 @@ impl Wave {
 
 
 #[derive(Default)]
-struct Square2 {
+struct Square {
     envelope: Envelope,
+    sweep: Option<Sweep>,
     enable: bool,
-    dac_power: bool,
     nr21: u8,
-    nr22: u8,
     nr23: u8,
     nr24: u8,
 
@@ -295,9 +294,14 @@ pub const WAVEFORM: [[u8; 8]; 4] = [
     [0, 1, 1, 1, 1, 1, 1, 0],
 ];
 
-impl Square2 {
+impl Square {
+
     pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
         self.envelope.cycle(frame_sequencer);
+        if let Some(sweep) = self.sweep.as_mut() {
+            sweep.cycle(frame_sequencer);
+            self.enable |= sweep.enable;
+        }
 
         if !self.enable {
             return;
@@ -327,7 +331,7 @@ impl Square2 {
         }
     }
 
-    fn check_trigger(&mut self) {
+    fn trigger(&mut self) {
         if self.nr24 & 0x80 == 0 {
             return;
         }
@@ -337,44 +341,56 @@ impl Square2 {
             let length = self.nr21 & 0x3f;
             self.len_counter = 64 - length as usize;
         }
+
+        let freq = self.freq();
+        if let Some(sweep) = self.sweep.as_mut() {
+            sweep.trigger(freq);
+        }
         self.counter = self.period();
     }
 
-    fn period(&self) -> usize {
-        let x = self.nr23 as usize | (self.nr24 as usize & 7) << 8;
-        // freq = 65536/(2048 - x) in Hz
-        // period = (4194304 / freq) in s
+    fn freq(&self) -> u16 {
+        self.nr23 as u16 | (self.nr24 as u16 & 7) << 8
+    }
 
-        // period in cycle
-        return 2 *  (2048 - x); // todo: mutiply by 2 or 64?
+    fn period(&self) -> usize {
+        let x = match self.sweep.as_ref() {
+            Some(sweep) => sweep.freq,
+            _ => self.freq(),
+        };
+        return 2 *  (2048 - x as usize);
     }
 
     pub fn read(&self, addr: u16) -> u8 {
         match addr {
-            0xff15 => mmu::NO_DATA,
-            0xff16 => self.nr21,
-            0xff17 => self.nr22,
-            0xff18 => self.nr23,
-            0xff19 => self.nr24,
+            0 => match self.sweep.as_ref() {
+                Some(sweep) => sweep.nr10,
+                _ => mmu::NO_DATA
+            },
+            1 => self.nr21,
+            2 => self.envelope.nrx2,
+            3 => self.nr23,
+            4 => self.nr24,
             _ => panic!("0x{:04x}", addr),
         }
     }
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
-            0xff15 => (),
-            0xff16 => self.nr21 = value,
-            0xff17 => {
-                self.nr22 = value;
-                if self.nr22 & 0xf8 == 0 {
+            0 => if let Some(sweep) = self.sweep.as_mut() {
+                sweep.set_nr10(value);
+            }
+            1 => self.nr21 = value,
+            2 => {
+                self.envelope.set_nrx2(value);
+                if value & 0xf8 == 0 {
                     self.enable = false;
                 }
-                self.envelope.set_nrx2(value);
             },
-            0xff18 => self.nr23 = value,
-            0xff19 => {
+            3 => self.nr23 = value,
+            4 => {
                 self.nr24 = value;
-                self.check_trigger();
+                self.trigger();
             }
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
         }
@@ -396,7 +412,8 @@ enum Nr51 {
 pub struct Sound {
     frame_sequencer: FrameSequencer,
     wave: Wave,
-    square2: Square2,
+    square1: Square,
+    square2: Square,
 
     nr50: u8,
     nr51: u8,
@@ -411,34 +428,43 @@ pub struct Sound {
 
 impl Sound {
     pub fn new() -> Self {
-        Sound::default()
+        let mut sound = Sound::default();
+        sound.square1.sweep = Some(Sweep::default());
+        sound
     }
 
     pub fn cycle(&mut self) {
         self.frame_sequencer.cycle();
         self.wave.cycle(&self.frame_sequencer);
+        self.square1.cycle(&self.frame_sequencer);
         self.square2.cycle(&self.frame_sequencer);
 
         self.so1_output = 0.0;
         self.so2_output = 0.0;
-        // if bit!(self.nr51, Nr51::Sound3ToSo1) {
-        //     self.so1_output += self.wave.output;
-        // }
-        // if bit!(self.nr51, Nr51::Sound3ToSo2) {
-        //     self.so2_output += self.wave.output;
-        // }
+        if bit!(self.nr51, Nr51::Sound3ToSo1) {
+            self.so1_output += self.wave.output;
+        }
+        if bit!(self.nr51, Nr51::Sound3ToSo2) {
+            self.so2_output += self.wave.output;
+        }
         if bit!(self.nr51, Nr51::Sound2ToSo1) {
             self.so1_output += self.square2.output;
         }
         if bit!(self.nr51, Nr51::Sound2ToSo2) {
             self.so2_output += self.square2.output;
         }
-
-        self.so1_output /= 4.0;
-        self.so2_output /= 4.0;
+        if bit!(self.nr51, Nr51::Sound1ToSo1) {
+            self.so1_output += self.square1.output;
+        }
+        if bit!(self.nr51, Nr51::Sound1ToSo2) {
+            self.so2_output += self.square1.output;
+        }
 
         self.so1_output *= self.so1_volume as f32 + 1.0;
         self.so2_output *= self.so2_volume as f32 + 1.0;
+
+        self.so1_output /= 32.0;
+        self.so2_output /= 32.0;
     }
 
     fn set_nr50(&mut self, v: u8) {
@@ -448,12 +474,13 @@ impl Sound {
     }
 
     fn get_nr52(&self) -> u8 {
-        return (self.enable as u8) << 7 | (self.wave.enable as u8) << 2 | (self.square2.enable as u8) << 1;
+        return (self.enable as u8) << 7 | (self.wave.enable as u8) << 2 | (self.square2.enable as u8) << 1 | (self.square1.enable as u8);
     }
 
     pub fn read(&self, addr: u16) -> u8 {
         match addr {
-            0xff15..=0xff19 => self.square2.read(addr),
+            0xff10..=0xff14 => self.square1.read(addr - 0xff10),
+            0xff15..=0xff19 => self.square2.read(addr - 0xff15),
             0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.read(addr),
             0xff24 => self.nr50,
             0xff25 => self.nr51,
@@ -465,7 +492,8 @@ impl Sound {
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
-            0xff15..=0xff19 => self.square2.write(addr, value),
+            0xff10..=0xff14 => self.square1.write(addr - 0xff10, value),
+            0xff15..=0xff19 => self.square2.write(addr - 0xff15, value),
             0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.write(addr, value),
             0xff24 => self.set_nr50(value),
             0xff25 => self.nr51 = value,

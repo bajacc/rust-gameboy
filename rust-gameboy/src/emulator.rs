@@ -28,7 +28,7 @@ const CYCLE_BETWEEN_RENDER: u128 = RENDER_DURATION.as_nanos() / CYCLE_DURATION.a
 pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
 
     let mut renderer = Renderer::new(background, background);
-    let mut speaker = Speaker::new(2);
+    let mut speaker = Speaker::new(16);
 
     let cycle_between_render = (CYCLE_BETWEEN_RENDER as f64 * speed) as u128;
 
