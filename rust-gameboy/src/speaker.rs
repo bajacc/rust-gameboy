@@ -2,40 +2,21 @@
 use std::sync::{Arc, atomic::Ordering};
 use atomic_float::AtomicF32;
 
-use rodio::{OutputStream, Sink, Source};
+use rodio::{OutputStream, Sink, Source, OutputStreamHandle};
+use std::sync::mpsc::{Sender, Receiver, channel};
 
 use crate::gb::GameBoy;
 
-#[derive(Default, Clone)]
 pub struct SoundSource {
-    pub output1: Arc<AtomicF32>,
-    pub output2: Arc<AtomicF32>,
-    output_id: usize,
-}
-
-impl SoundSource {
-    pub fn new() -> Self {
-        SoundSource::default()
-    }
-
-    pub fn update(&mut self, output1: f32, output2: f32) {
-        self.output1.store(output1, Ordering::Relaxed);
-        self.output2.store(output2, Ordering::Relaxed);
-    }
+    pub sample_rate: u32,
+    receiver: Receiver<f32>
 }
 
 impl Iterator for SoundSource {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let result = match self.output_id {
-            0 => self.output1.load(Ordering::Relaxed),
-            1 => self.output2.load(Ordering::Relaxed),
-            _ => panic!("unreachable output id")
-        };
-
-        self.output_id = (self.output_id + 1) % 2;
-        Some(result)
+        Some(self.receiver.recv().unwrap())
     }
 }
 
@@ -50,7 +31,7 @@ impl Source for SoundSource {
     }
 
     fn sample_rate(&self) -> u32 {
-        441000
+        self.sample_rate
     }
 
     fn total_duration(&self) -> Option<std::time::Duration> {
@@ -58,26 +39,44 @@ impl Source for SoundSource {
     }
 }
 
+const CYCLE_PER_SECOND: u32 = 1 << 20;
+
 pub struct Speaker {
     stream: OutputStream,
-    sink: Sink,
-    sound_source: SoundSource
+    stream_handle: OutputStreamHandle,
+    cycle_per_sample: u32,
+    counter: u32,
+    sender: Sender<f32>
 }
 
 
 impl Speaker {
-    pub fn new() -> Self {
+    pub fn new(cycle_per_sample: u32) -> Self {
         let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-        let speaker = Speaker {
-            stream: _stream,
-            sink: Sink::try_new(&stream_handle).unwrap(),
-            sound_source: SoundSource::new(),
+        let (sender, recv) = channel();
+        for _ in 0..4 {
+            sender.send(0.0).unwrap();
+        }
+        let sound_source = SoundSource { 
+            sample_rate: CYCLE_PER_SECOND / cycle_per_sample,
+            receiver: recv 
         };
-        stream_handle.play_raw(speaker.sound_source.clone().convert_samples()).unwrap();
-        speaker
+        stream_handle.play_raw(sound_source).unwrap();
+        Speaker {
+            stream: _stream,
+            stream_handle: stream_handle,
+            cycle_per_sample: cycle_per_sample,
+            sender: sender,
+            counter: 0
+        }
     }
 
-    pub fn update(&mut self, gb: &GameBoy) {
-        self.sound_source.update(gb.mmu.sound.so1_output, gb.mmu.sound.so2_output);
+    pub fn cycle(&mut self, gb: &GameBoy) {
+        if self.counter == self.cycle_per_sample {
+            self.sender.send(gb.mmu.sound.so1_output).unwrap();
+            self.sender.send(gb.mmu.sound.so2_output).unwrap();
+            self.counter = 0;
+        }
+        self.counter += 1;
     }
 }

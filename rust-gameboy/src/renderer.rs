@@ -1,6 +1,6 @@
 extern crate minifb;
 use crate::{Lcd, gb::GameBoy};
-use minifb::{Window, WindowOptions};
+use minifb::{Window, WindowOptions, Scale};
 
 pub struct Renderer {
     pub lcd_window: Window,
@@ -8,9 +8,8 @@ pub struct Renderer {
     pub bg_window: Vec<Window>,
 }
 
-const LCD_WINDOW_SCALE: usize = 4;
-const LCD_WINDOW_WIDTH: usize = Lcd::WIDTH as usize * LCD_WINDOW_SCALE;
-const LCD_WINDOW_HEIGH: usize = Lcd::HEIGHT as usize * LCD_WINDOW_SCALE;
+const LCD_WINDOW_WIDTH: usize = Lcd::WIDTH as usize;
+const LCD_WINDOW_HEIGH: usize = Lcd::HEIGHT as usize;
 
 const TILE_WINDOW_WIDTH: usize = 128;
 const TILE_WINDOW_HEIGHT: usize = 192;
@@ -20,9 +19,13 @@ const BG_WINDOW_HEIGHT: usize = 256;
 
 impl Renderer {
     pub fn new(has_tile: bool, has_bg: bool) -> Self {
-        let mut lcd_window = Window::new("GameBoy", LCD_WINDOW_WIDTH, LCD_WINDOW_HEIGH, WindowOptions::default()).unwrap();
+        let lcd_window = Window::new("GameBoy", LCD_WINDOW_WIDTH, LCD_WINDOW_HEIGH,  WindowOptions {
+            resize: false,
+            scale: Scale::X4,
+            ..WindowOptions::default()
+        }).unwrap();
         // Limit to max ~60 fps update rate
-        lcd_window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
+        //lcd_window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
 
         let mut tiles_window = None;
         if has_tile {
@@ -67,13 +70,9 @@ impl Renderer {
     const COLOR: [u32; 4] = [0xffffff, 0xc0c0c0, 0x606060, 0x000000];
 
     pub fn render_u8(&mut self, buffer: &[u8]) {
-        let mut b = vec![0; LCD_WINDOW_HEIGH * LCD_WINDOW_WIDTH];
-        for y in 0..LCD_WINDOW_HEIGH {
-            for x in 0..LCD_WINDOW_WIDTH {
-                b[y * LCD_WINDOW_WIDTH + x] = Renderer::COLOR[buffer
-                    [(y / LCD_WINDOW_SCALE) * Lcd::WIDTH as usize + (x / LCD_WINDOW_SCALE)]
-                    as usize];
-            }
+        let mut b = [0; LCD_WINDOW_HEIGH * LCD_WINDOW_WIDTH];
+        for i in 0..buffer.len() {
+            b[i] = Renderer::COLOR[buffer[i] as usize];
         }
         self.lcd_window
             .update_with_buffer(&b, LCD_WINDOW_WIDTH, LCD_WINDOW_HEIGH)

@@ -213,15 +213,14 @@ struct Square2 {
     pub output: f32
 }
 
+pub const WAVEFORM: [[u8; 8]; 4] = [
+    [0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 1, 1, 1],
+    [0, 1, 1, 1, 1, 1, 1, 0],
+];
+
 impl Square2 {
-
-    const WAVEFORM: [[u8; 8]; 4] = [
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 1, 1, 1],
-        [0, 1, 1, 1, 1, 1, 1, 0],
-    ];
-
     pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
         self.envelope.cycle(frame_sequencer);
 
@@ -232,11 +231,11 @@ impl Square2 {
         if self.counter != 0 {
             self.counter -= 1;
             if self.counter == 0 {
-                self.reset_counter();
+                self.counter = self.period();
                 
                 let duty = self.nr21 >> 6;
 
-                let mut output = Square2::WAVEFORM[duty as usize][self.position];
+                let mut output = WAVEFORM[duty as usize][self.position];
                 output *= self.envelope.volume;
                 
                 self.position = (self.position + 1) % 8;
@@ -263,16 +262,16 @@ impl Square2 {
             let length = self.nr21 & 0x3f;
             self.len_counter = 64 - length as usize;
         }
-        self.reset_counter();
+        self.counter = self.period();
     }
 
-    fn reset_counter(&mut self) {
+    fn period(&self) -> usize {
         let x = self.nr23 as usize | (self.nr24 as usize & 7) << 8;
         // freq = 65536/(2048 - x) in Hz
         // period = (4194304 / freq) in s
 
         // period in cycle
-        self.counter = 4 * (2048 - x); // todo: mutiply by 2 or 64?
+        return 2 *  (2048 - x); // todo: mutiply by 2 or 64?
     }
 
     pub fn read(&self, addr: u16) -> u8 {
@@ -334,6 +333,7 @@ pub struct Sound {
 
     pub so1_output: f32,
     pub so2_output: f32,
+    pub position: usize,
 }
 
 impl Sound {
@@ -348,18 +348,28 @@ impl Sound {
 
         self.so1_output = 0.0;
         self.so2_output = 0.0;
-        if bit!(self.nr51, Nr51::Sound3ToSo1) {
-            self.so1_output += self.wave.output;
-        }
-        if bit!(self.nr51, Nr51::Sound3ToSo2) {
-            self.so2_output += self.wave.output;
-        }
+        // if bit!(self.nr51, Nr51::Sound3ToSo1) {
+        //     self.so1_output += self.wave.output;
+        // }
+        // if bit!(self.nr51, Nr51::Sound3ToSo2) {
+        //     self.so2_output += self.wave.output;
+        // }
         if bit!(self.nr51, Nr51::Sound2ToSo1) {
             self.so1_output += self.square2.output;
         }
         if bit!(self.nr51, Nr51::Sound2ToSo2) {
             self.so2_output += self.square2.output;
         }
+        
+
+        // todo
+        // let mut output = Square2::WAVEFORM[0][self.position/32];
+        // output *= 7;
+        
+        // self.position = (self.position + 1) % (8 * 32);
+        // self.so1_output = (output as f32 / 7.5) - 1.0;
+        // self.so2_output = (output as f32 / 7.5) - 1.0;
+        // todo
 
         self.so1_output /= 4.0;
         self.so2_output /= 4.0;
