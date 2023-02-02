@@ -68,13 +68,19 @@ struct Envelope {
 
 impl Envelope {
     pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
-        if !frame_sequencer.vol_env || self.period == 0 {
+        if !frame_sequencer.sweep || self.period == 0 {
             return;
         }
 
         if self.period_counter != 0 {
             self.period_counter -= 1;
         }
+
+        if self.period_counter != 0 {
+            return;
+        }
+
+        self.period_counter = self.period;
 
         match self.increment {
             false if self.volume > 0 => self.volume -= 1,
@@ -87,6 +93,75 @@ impl Envelope {
         self.volume = value >> 4;
         self.period = value & 0x7;
         self.increment = bit!(value, 3);
+    }
+}
+
+#[derive(Default)]
+struct Sweep {
+    pub shift: u8,
+    pub period: u8,
+    pub increment: bool,
+
+    pub enable: bool,
+    pub freq: u16,
+    period_counter: u8,
+}
+
+impl Sweep {
+    pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
+        if !frame_sequencer.vol_env {
+            return;
+        }
+
+        if self.period_counter != 0 {
+            self.period_counter -= 1;
+            return;
+        }
+
+        if self.period_counter != 0 {
+            return;
+        }
+        self.period_counter = match self.period {
+            0 => 8,
+            _ => self.period,
+        };
+
+        let new_freq = self.compute_next_freq();
+        if new_freq > 0 && new_freq < 2048 {
+            self.freq = new_freq as u16;
+            self.compute_next_freq();
+        }
+        
+    }
+
+    fn compute_next_freq(&mut self) -> i16 {
+        let shifted = (self.freq >> self.shift) as i16;
+        let new_freq = self.freq as i16 + match self.increment {
+            false => -shifted,
+            true => shifted,
+        };
+        if new_freq >= 2048 {
+            self.enable = false;
+        }
+        new_freq
+    }
+
+    pub fn set_nr10(&mut self, value: u8) {
+        self.period = (value >> 4) & 0x7;
+        self.shift = value & 0x7;
+        self.increment = !bit!(value, 3);
+    }
+
+    pub fn trigger(&mut self, freq: u16) {
+        self.freq = freq;
+        self.period_counter = match self.period {
+            0 => 8,
+            _ => self.period,
+        };
+        self.enable = self.period != 0 || self.shift != 0;
+        if self.shift != 0 {
+            self.compute_next_freq();
+        }
     }
 }
 
@@ -276,7 +351,7 @@ impl Square2 {
 
     pub fn read(&self, addr: u16) -> u8 {
         match addr {
-            0xff15 => (self.dac_power as u8) << 7,
+            0xff15 => mmu::NO_DATA,
             0xff16 => self.nr21,
             0xff17 => self.nr22,
             0xff18 => self.nr23,
@@ -287,15 +362,13 @@ impl Square2 {
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
-            0xff15 => {
-                self.dac_power = value & 0x80 != 0;
-                if !self.dac_power {
-                    self.enable = false;
-                }
-            }
+            0xff15 => (),
             0xff16 => self.nr21 = value,
             0xff17 => {
                 self.nr22 = value;
+                if self.nr22 & 0xf8 == 0 {
+                    self.enable = false;
+                }
                 self.envelope.set_nrx2(value);
             },
             0xff18 => self.nr23 = value,
@@ -360,16 +433,6 @@ impl Sound {
         if bit!(self.nr51, Nr51::Sound2ToSo2) {
             self.so2_output += self.square2.output;
         }
-        
-
-        // todo
-        // let mut output = Square2::WAVEFORM[0][self.position/32];
-        // output *= 7;
-        
-        // self.position = (self.position + 1) % (8 * 32);
-        // self.so1_output = (output as f32 / 7.5) - 1.0;
-        // self.so2_output = (output as f32 / 7.5) - 1.0;
-        // todo
 
         self.so1_output /= 4.0;
         self.so2_output /= 4.0;
