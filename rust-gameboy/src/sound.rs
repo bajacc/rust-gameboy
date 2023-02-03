@@ -6,6 +6,10 @@ macro_rules! bit {
     };
 }
 
+fn to_f32(v: u8) -> f32 {
+    return (v as f32 / 7.5) - 1.0;
+}
+
 // Step   Length Ctr  Vol Env     Sweep
 // ---------------------------------------
 // 0      Clock       -           -
@@ -183,7 +187,6 @@ struct Wave {
     len_counter: usize,
 
     position: usize,
-    pub output: f32
 }
 
 impl Wave {
@@ -200,13 +203,6 @@ impl Wave {
             if self.counter == 0 {
                 self.counter = self.period();
                 self.position = (self.position + 1) % (self.ram.len() * 2);
-                
-                let mut output = self.ram[self.position / 2];
-                output >>= (self.position & 1) * 4;
-                output &= 0x0f;
-                output >>= Wave::VOLUME_SHIFT[self.volume as usize];
-
-                self.output = (output as f32 / 7.5) - 1.0;
             }
         }
 
@@ -214,9 +210,19 @@ impl Wave {
             self.len_counter -= 1;
             if self.len_counter == 0 && self.nr34 & 0x40 != 0 {
                 self.enable = false;
-                self.output = 0.0;
             }
         }
+    }
+
+    fn get_sample(&self) -> u8 {
+        if !self.enable {
+            return 0;
+        }
+        let mut output = self.ram[self.position / 2];
+        output >>= (self.position & 1) * 4;
+        output &= 0x0f;
+        output >>= Wave::VOLUME_SHIFT[self.volume as usize];
+        return output;
     }
 
     fn trigger(&mut self) {
@@ -282,7 +288,6 @@ struct Square {
     len_counter: usize,
 
     position: usize,
-    pub output: f32
 }
 
 pub const WAVEFORM: [[u8; 8]; 4] = [
@@ -309,14 +314,7 @@ impl Square {
             self.counter -= 1;
             if self.counter == 0 {
                 self.counter = self.period();
-                
-                let duty = self.nr21 >> 6;
-
-                let mut output = WAVEFORM[duty as usize][self.position];
-                output *= self.envelope.volume;
-                
                 self.position = (self.position + 1) % 8;
-                self.output = (output as f32 / 7.5) - 1.0;
             }
         }
 
@@ -324,9 +322,16 @@ impl Square {
             self.len_counter -= 1;
             if self.len_counter == 0 && self.nr24 & 0x40 != 0 {
                 self.enable = false;
-                self.output = 0.0;
             }
         }
+    }
+
+    pub fn get_sample(&self) -> u8 {
+        if !self.enable {
+            return 0;
+        }
+        let duty = self.nr21 >> 6;
+        return WAVEFORM[duty as usize][self.position] * self.envelope.volume;
     }
 
     fn trigger(&mut self) {
@@ -356,7 +361,7 @@ impl Square {
             Some(sweep) => sweep.freq,
             _ => self.freq(),
         };
-        return 2 *  (2048 - x as usize);
+        return 2 * (2048 - x as usize);
     }
 
     pub fn read(&self, addr: u16) -> u8 {
@@ -407,7 +412,6 @@ struct Noise {
     length: u8,
 
     counter: usize,
-    pub output: f32
 }
 
 impl Noise {
@@ -431,12 +435,6 @@ impl Noise {
                     self.lfsr &= !(1 << 6);
                     self.lfsr |= xor << 6;
                 }
-                
-                let output = match bit!(self.lfsr, 1) {
-                    true => 0,
-                    false => self.envelope.volume,
-                };
-                self.output = (output as f32 / 7.5) - 1.0;
             }
         }
 
@@ -444,9 +442,18 @@ impl Noise {
             self.len_counter -= 1;
             if self.len_counter == 0 && self.nr44 & 0x40 != 0 {
                 self.enable = false;
-                self.output = 0.0;
             }
         }
+    }
+
+    fn get_sample(&self) -> u8 {
+        if !self.enable {
+            return 0;
+        }
+        return match bit!(self.lfsr, 1) {
+            true => 0,
+            false => self.envelope.volume,
+        };
     }
 
     fn trigger(&mut self) {
@@ -469,7 +476,7 @@ impl Noise {
             0 => 1,
             _ => divisor_code << 1,
         };
-        divisor << (shift + 1) // todo factor 2
+        divisor << (shift + 1) // todo factor 2?
     }
 
     pub fn read(&self, addr: u16) -> u8 {
@@ -527,9 +534,6 @@ pub struct Sound {
     enable: bool,
     so1_volume: u16,
     so2_volume: u16,
-
-    pub so1_output: f32,
-    pub so2_output: f32,
     pub position: usize,
 }
 
@@ -545,40 +549,49 @@ impl Sound {
         self.wave.cycle(&self.frame_sequencer);
         self.square1.cycle(&self.frame_sequencer);
         self.square2.cycle(&self.frame_sequencer);
-        self.noise.cycle(&self.frame_sequencer);
+        self.noise.cycle(&self.frame_sequencer);        
+    }
 
-        self.so1_output = 0.0;
-        self.so2_output = 0.0;
+    pub fn get_sample(&self) -> (f32, f32) {
+        let mut so1_output = 0.0;
+        let mut so2_output = 0.0;
+        
+        let square1_out = to_f32(self.square1.get_sample());
+        let square2_out = to_f32(self.square2.get_sample());
+        let wave_out = to_f32(self.wave.get_sample());
+        let noise_out = to_f32(self.noise.get_sample());
         if bit!(self.nr51, Nr51::Sound1ToSo1) {
-            self.so1_output += self.square1.output;
+            so1_output += square1_out;
         }
         if bit!(self.nr51, Nr51::Sound1ToSo2) {
-            self.so2_output += self.square1.output;
+            so2_output += square1_out;
         }
         if bit!(self.nr51, Nr51::Sound2ToSo1) {
-            self.so1_output += self.square2.output;
+            so1_output += square2_out;
         }
         if bit!(self.nr51, Nr51::Sound2ToSo2) {
-            self.so2_output += self.square2.output;
+            so2_output += square2_out;
         }
         if bit!(self.nr51, Nr51::Sound3ToSo1) {
-            self.so1_output += self.wave.output;
+            so1_output += wave_out;
         }
         if bit!(self.nr51, Nr51::Sound3ToSo2) {
-            self.so2_output += self.wave.output;
+            so2_output += wave_out;
         }
         if bit!(self.nr51, Nr51::Sound4ToSo1) {
-            self.so1_output += self.noise.output;
+            so1_output += noise_out;
         }
         if bit!(self.nr51, Nr51::Sound4ToSo2) {
-            self.so2_output += self.noise.output;
+            so2_output += noise_out;
         }
 
-        self.so1_output *= self.so1_volume as f32 + 1.0;
-        self.so2_output *= self.so2_volume as f32 + 1.0;
+        so1_output *= self.so1_volume as f32 + 1.0;
+        so2_output *= self.so2_volume as f32 + 1.0;
 
-        self.so1_output /= 32.0;
-        self.so2_output /= 32.0;
+        so1_output /= 32.0;
+        so2_output /= 32.0;
+
+        return (so1_output, so2_output);
     }
 
     fn set_nr50(&mut self, v: u8) {

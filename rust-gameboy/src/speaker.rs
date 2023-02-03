@@ -73,9 +73,11 @@ impl Speaker {
 
     pub fn cycle(&mut self, gb: &GameBoy) {
         if self.counter == self.cycle_per_sample {
-            self.sender.send(gb.mmu.sound.so1_output).unwrap();
-            self.sender.send(gb.mmu.sound.so2_output).unwrap();
             self.counter = 0;
+
+            let (left, right) = gb.mmu.sound.get_sample();
+            self.sender.send(left).unwrap();
+            self.sender.send(right).unwrap();
         }
         self.counter += 1;
     }
