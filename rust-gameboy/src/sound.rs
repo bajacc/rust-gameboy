@@ -397,6 +397,114 @@ impl Square {
     }
 }
 
+#[derive(Default)]
+struct Noise {
+    envelope: Envelope,
+    enable: bool,
+    nr43: u8,
+    nr44: u8,
+    lfsr: u16,
+
+    len_counter: usize,
+    length: u8,
+
+    counter: usize,
+    pub output: f32
+}
+
+impl Noise {
+
+    pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
+        self.envelope.cycle(frame_sequencer);
+
+        if !self.enable {
+            return;
+        }
+
+        if self.counter != 0 {
+            self.counter -= 1;
+            if self.counter == 0 {
+                self.counter = self.period();
+
+                let xor = (self.lfsr & 1) ^ ((self.lfsr & 2) >> 1);
+                self.lfsr = (self.lfsr >> 1) | (xor << 14);
+
+                if bit!(self.nr43, 3) {
+                    self.lfsr &= !(1 << 6);
+                    self.lfsr |= xor << 6;
+                }
+                
+                let output = match bit!(self.lfsr, 1) {
+                    true => 0,
+                    false => self.envelope.volume,
+                };
+                self.output = (output as f32 / 7.5) - 1.0;
+            }
+        }
+
+        if frame_sequencer.length_ctr && self.len_counter != 0 {
+            self.len_counter -= 1;
+            if self.len_counter == 0 && self.nr44 & 0x40 != 0 {
+                self.enable = false;
+                self.output = 0.0;
+            }
+        }
+    }
+
+    fn trigger(&mut self) {
+        if self.nr44 & 0x80 == 0 {
+            return;
+        }
+
+        self.enable = true;
+        self.lfsr = 0x7fff;
+        if self.len_counter == 0 {
+            self.len_counter = 64 - self.length as usize;
+        }
+        self.counter = self.period();
+    }
+
+    fn period(&self) -> usize {
+        let divisor_code = (self.nr43 & 7) as usize;
+        let shift = ((self.nr43 >> 4) & 7) as usize;
+        let divisor = match divisor_code {
+            0 => 1,
+            _ => divisor_code << 1,
+        };
+        divisor << (shift + 1) // todo factor 2
+    }
+
+    pub fn read(&self, addr: u16) -> u8 {
+        match addr {
+            0 => mmu::NO_DATA,
+            1 => self.length,
+            2 => self.envelope.nrx2,
+            3 => self.nr43,
+            4 => self.nr44,
+            _ => panic!("0x{:04x}", addr),
+        }
+    }
+
+    pub fn write(&mut self, addr: u16, value: u8) {
+        match addr {
+            0 => (),
+            1 => self.length = value & 0x3f,
+            2 => {
+                self.envelope.set_nrx2(value);
+                if value & 0xf8 == 0 {
+                    self.enable = false;
+                }
+            },
+            3 => self.nr43 = value,
+            4 => {
+                self.nr44 = value;
+                self.trigger();
+            }
+            _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
+        }
+    }
+}
+
 enum Nr51 {
     Sound4ToSo2 = 7,
     Sound3ToSo2 = 6,
@@ -411,9 +519,10 @@ enum Nr51 {
 #[derive(Default)]
 pub struct Sound {
     frame_sequencer: FrameSequencer,
-    wave: Wave,
     square1: Square,
     square2: Square,
+    wave: Wave,
+    noise: Noise,
 
     nr50: u8,
     nr51: u8,
@@ -438,6 +547,7 @@ impl Sound {
         self.wave.cycle(&self.frame_sequencer);
         self.square1.cycle(&self.frame_sequencer);
         self.square2.cycle(&self.frame_sequencer);
+        self.noise.cycle(&self.frame_sequencer);
 
         self.so1_output = 0.0;
         self.so2_output = 0.0;
@@ -459,6 +569,12 @@ impl Sound {
         if bit!(self.nr51, Nr51::Sound1ToSo2) {
             self.so2_output += self.square1.output;
         }
+        if bit!(self.nr51, Nr51::Sound4ToSo1) {
+            self.so1_output += self.noise.output;
+        }
+        if bit!(self.nr51, Nr51::Sound4ToSo2) {
+            self.so2_output += self.noise.output;
+        }
 
         self.so1_output *= self.so1_volume as f32 + 1.0;
         self.so2_output *= self.so2_volume as f32 + 1.0;
@@ -474,7 +590,11 @@ impl Sound {
     }
 
     fn get_nr52(&self) -> u8 {
-        return (self.enable as u8) << 7 | (self.wave.enable as u8) << 2 | (self.square2.enable as u8) << 1 | (self.square1.enable as u8);
+        return (self.enable as u8) << 7 
+        | (self.wave.enable as u8) << 3 
+        | (self.wave.enable as u8) << 2 
+        | (self.square2.enable as u8) << 1 
+        | (self.square1.enable as u8);
     }
 
     pub fn read(&self, addr: u16) -> u8 {
@@ -482,6 +602,7 @@ impl Sound {
             0xff10..=0xff14 => self.square1.read(addr - 0xff10),
             0xff15..=0xff19 => self.square2.read(addr - 0xff15),
             0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.read(addr),
+            0xff1f..=0xff23 => self.noise.read(addr - 0xff1f),
             0xff24 => self.nr50,
             0xff25 => self.nr51,
             0xff26 => self.get_nr52(),
@@ -495,6 +616,7 @@ impl Sound {
             0xff10..=0xff14 => self.square1.write(addr - 0xff10, value),
             0xff15..=0xff19 => self.square2.write(addr - 0xff15, value),
             0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.write(addr, value),
+            0xff1f..=0xff23 => self.noise.write(addr - 0xff1f, value),
             0xff24 => self.set_nr50(value),
             0xff25 => self.nr51 = value,
             0xff26 => self.enable = value & 0x80 != 0,
