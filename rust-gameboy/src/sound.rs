@@ -239,32 +239,30 @@ impl Wave {
 
     pub fn read(&self, addr: u16) -> u8 {
         match addr {
-            0xff1a => (self.dac_power as u8) << 7,
-            0xff1b => self.length,
-            0xff1c => self.volume << 5,
-            0xff1d => self.nr33,
-            0xff1e => self.nr34,
-            0xff30..=0xff3f => self.ram[addr as usize - 0xff30],
+            0 => (self.dac_power as u8) << 7,
+            1 => self.length,
+            2 => self.volume << 5,
+            3 => self.nr33,
+            4 => self.nr34,
             _ => panic!("0x{:04x}", addr),
         }
     }
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
-            0xff1a => {
+            0 => {
                 self.dac_power = value & 0x80 != 0;
                 if !self.dac_power {
                     self.enable = false;
                 }
             }
-            0xff1b => self.length = value,
-            0xff1c => self.volume = (value >> 5) & 3,
-            0xff1d => self.nr33 = value,
-            0xff1e => {
+            1 => self.length = value,
+            2 => self.volume = (value >> 5) & 3,
+            3 => self.nr33 = value,
+            4 => {
                 self.nr34 = value;
                 self.trigger();
             }
-            0xff30..=0xff3f => self.ram[addr as usize - 0xff30] = value,
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
         }
     }
@@ -551,11 +549,11 @@ impl Sound {
 
         self.so1_output = 0.0;
         self.so2_output = 0.0;
-        if bit!(self.nr51, Nr51::Sound3ToSo1) {
-            self.so1_output += self.wave.output;
+        if bit!(self.nr51, Nr51::Sound1ToSo1) {
+            self.so1_output += self.square1.output;
         }
-        if bit!(self.nr51, Nr51::Sound3ToSo2) {
-            self.so2_output += self.wave.output;
+        if bit!(self.nr51, Nr51::Sound1ToSo2) {
+            self.so2_output += self.square1.output;
         }
         if bit!(self.nr51, Nr51::Sound2ToSo1) {
             self.so1_output += self.square2.output;
@@ -563,11 +561,11 @@ impl Sound {
         if bit!(self.nr51, Nr51::Sound2ToSo2) {
             self.so2_output += self.square2.output;
         }
-        if bit!(self.nr51, Nr51::Sound1ToSo1) {
-            self.so1_output += self.square1.output;
+        if bit!(self.nr51, Nr51::Sound3ToSo1) {
+            self.so1_output += self.wave.output;
         }
-        if bit!(self.nr51, Nr51::Sound1ToSo2) {
-            self.so2_output += self.square1.output;
+        if bit!(self.nr51, Nr51::Sound3ToSo2) {
+            self.so2_output += self.wave.output;
         }
         if bit!(self.nr51, Nr51::Sound4ToSo1) {
             self.so1_output += self.noise.output;
@@ -601,12 +599,13 @@ impl Sound {
         match addr {
             0xff10..=0xff14 => self.square1.read(addr - 0xff10),
             0xff15..=0xff19 => self.square2.read(addr - 0xff15),
-            0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.read(addr),
+            0xff1a..=0xff1e => self.wave.read(addr - 0xff1a),
             0xff1f..=0xff23 => self.noise.read(addr - 0xff1f),
             0xff24 => self.nr50,
             0xff25 => self.nr51,
             0xff26 => self.get_nr52(),
             0xff27..=0xff2f => mmu::NO_DATA,
+            0xff30..=0xff3f => self.wave.ram[addr as usize - 0xff30],
             _ => mmu::NO_DATA,
         }
     }
@@ -615,12 +614,13 @@ impl Sound {
         match addr {
             0xff10..=0xff14 => self.square1.write(addr - 0xff10, value),
             0xff15..=0xff19 => self.square2.write(addr - 0xff15, value),
-            0xff1a..=0xff1e|0xff30..=0xff3f => self.wave.write(addr, value),
+            0xff1a..=0xff1e => self.wave.write(addr - 0xff1a, value),
             0xff1f..=0xff23 => self.noise.write(addr - 0xff1f, value),
             0xff24 => self.set_nr50(value),
             0xff25 => self.nr51 = value,
             0xff26 => self.enable = value & 0x80 != 0,
             0xff27..=0xff2f => (),
+            0xff30..=0xff3f => self.wave.ram[addr as usize - 0xff30] = value,
             _ => (),
         }
     }
