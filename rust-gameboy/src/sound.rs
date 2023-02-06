@@ -555,7 +555,7 @@ impl Sound {
     pub fn get_sample(&self) -> (f32, f32) {
         let mut so1_output = 0.0;
         let mut so2_output = 0.0;
-        
+
         let square1_out = to_f32(self.square1.get_sample());
         let square2_out = to_f32(self.square2.get_sample());
         let wave_out = to_f32(self.wave.get_sample());
@@ -619,7 +619,7 @@ impl Sound {
             0xff26 => self.get_nr52(),
             0xff27..=0xff2f => mmu::NO_DATA,
             0xff30..=0xff3f => self.wave.ram[addr as usize - 0xff30],
-            _ => mmu::NO_DATA,
+            _ => panic!("0x{:04x}", addr),
         }
     }
 
@@ -634,7 +634,7 @@ impl Sound {
             0xff26 => self.enable = value & 0x80 != 0,
             0xff27..=0xff2f => (),
             0xff30..=0xff3f => self.wave.ram[addr as usize - 0xff30] = value,
-            _ => (),
+            _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
         }
     }
 }

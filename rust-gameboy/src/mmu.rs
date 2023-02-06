@@ -78,7 +78,7 @@ impl Mmu {
             0xc000..=0xdfff => self.work_ram[addr as usize - 0xc000],
             0xe000..=0xfdff => self.work_ram[addr as usize - 0xe000],
             0xfe00..=0xfe9f => self.lcd.read(addr),
-            0xff10..=0xff3f => self.sound.read(addr), // todo more address
+            0xff10..=0xff3f => self.sound.read(addr),
             0xff80..=0xfffe => self.high_ram[addr as usize - 0xff80],
 
             0xff00 => self.joypad.read(addr),
