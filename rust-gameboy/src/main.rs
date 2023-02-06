@@ -13,24 +13,16 @@ mod mmu;
 mod opcodes;
 mod opcodes_const;
 mod renderer;
+mod sound;
+mod speaker;
 mod timer;
 
 use debugger::Debugger;
-use std::path::{Path, PathBuf};
-use std::thread;
-use std::time::{Duration, Instant};
+use std::path::PathBuf;
 
 use gb::GameBoy;
-use mbc::Mbc;
-
-use std::env;
-use std::fs::File;
-use std::io::BufReader;
-use std::io::Read;
 
 use crate::lcd::Lcd;
-use crate::renderer::Renderer;
-use minifb::Key;
 
 use clap::Parser;
 
@@ -52,7 +44,6 @@ struct Cli {
     background: bool,
 }
 
-// todo: use clap to give more option at launch
 fn main() {
     let cli = Cli::parse();
 
