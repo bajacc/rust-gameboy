@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use crate::cpu::Cpu;
 use crate::desassembler::disassemble;
 use crate::dma::Dma;
+use crate::hardware::Hardware;
 use crate::mbc::Mbc;
 use crate::mmu::Mmu;
 
@@ -25,12 +26,8 @@ impl GameBoy {
         }
     }
 
-    pub fn from_path(path: PathBuf) -> Self {
-        let mut f = File::open(path).expect("couldn't read file");
-        let mut buffer = Vec::new();
-        f.read_to_end(&mut buffer).expect("couldn't read file");
-
-        let mbc = Mbc::new(buffer);
+    pub fn from_hardware(hardware: &Hardware) -> Self {
+        let mbc = Mbc::new(&hardware);
         return GameBoy::new(mbc);
     }
 

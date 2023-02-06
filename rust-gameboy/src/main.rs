@@ -16,8 +16,10 @@ mod renderer;
 mod sound;
 mod speaker;
 mod timer;
+mod hardware;
 
 use debugger::Debugger;
+use hardware::Hardware;
 use std::path::PathBuf;
 
 use gb::GameBoy;
@@ -47,11 +49,12 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let mut gb = GameBoy::from_path(cli.path);
+    let hardware = Hardware::new(cli.path);
+    let mut gb = GameBoy::from_hardware(&hardware);
 
     if cli.debug {
         Debugger::new(gb).run();
     } else {
-        emulator::run(&mut gb, cli.speed, cli.background);
+        emulator::run(&mut gb, cli.speed, cli.background, &hardware);
     }
 }

@@ -1,4 +1,4 @@
-use crate::gb::GameBoy;
+use crate::{gb::GameBoy, hardware::Hardware};
 use rstest::rstest;
 use std::path::Path;
 
@@ -23,7 +23,8 @@ fn test_blargg(#[case] path_name: &str) {
 fn blargg_pass(path_name: &str) -> bool {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"));
     let blargg_path = path.join("blarggs").join(path_name);
-    let mut gb = GameBoy::from_path(blargg_path.to_path_buf());
+    let hardware = Hardware::new(blargg_path);
+    let mut gb = GameBoy::from_hardware(&hardware);
     let mut output = String::new();
 
     gb.cpu.pc = 0x100;

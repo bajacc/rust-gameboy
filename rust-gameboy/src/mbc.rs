@@ -1,3 +1,5 @@
+use crate::hardware::{self, Hardware};
+
 pub enum Mbc {
     Mbc0(Mbc0),
     Mbc1(Mbc1),
@@ -9,7 +11,9 @@ impl Mbc {
     pub fn cartridge_type(mem: &Vec<u8>) -> u8 {
         return mem[0x147];
     }
-    pub fn new(mem: Vec<u8>) -> Self {
+    pub fn new(hardware: &Hardware) -> Self {
+        let mut mem = Vec::new();
+        hardware.read_dot_gb(&mut mem);
         let code = Self::cartridge_type(&mem);
         match code {
             0x00 => Mbc::Mbc0(Mbc0::new(mem)),
@@ -35,6 +39,24 @@ impl Mbc {
             Mbc::Mbc1(mbc) => mbc.write(addr, value),
             Mbc::Mbc2(mbc) => mbc.write(addr, value),
             Mbc::Mbc3(mbc) => mbc.write(addr, value),
+        }
+    }
+
+    pub fn load_save(&mut self, hardware: &Hardware) {
+        match self {
+            Mbc::Mbc1(mbc) => hardware.load_save(&mut mbc.ram),
+            Mbc::Mbc2(mbc) => hardware.load_save(&mut mbc.ram),
+            Mbc::Mbc3(mbc) => hardware.load_save(&mut mbc.ram),
+            _ => (),
+        }
+    }
+
+    pub fn save(&self, hardware: &Hardware) {
+        match self {
+            Mbc::Mbc1(mbc) => hardware.save(&mbc.ram),
+            Mbc::Mbc2(mbc) => hardware.save(&mbc.ram),
+            Mbc::Mbc3(mbc) => hardware.save(&mbc.ram),
+            _ => (),
         }
     }
 
@@ -69,7 +91,7 @@ impl Mbc0 {
 
 pub struct Mbc1 {
     rom: Vec<u8>,
-    ram: [[u8; 0x2000]; 4],
+    ram: [u8; 4 * 0x2000],
     rom_bank_number: u8,
     ram_bank_number: u8,
     ram_select_mode: bool,
@@ -77,10 +99,13 @@ pub struct Mbc1 {
 }
 
 impl Mbc1 {
+
+    const RAM_SIZE: usize = 0x2000;
+
     pub fn new(mem: Vec<u8>) -> Self {
         Mbc1 {
             rom: mem,
-            ram: [[0; 0x2000]; 4],
+            ram: [0; 4 * 0x2000],
             rom_bank_number: 0,
             ram_bank_number: 0,
             ram_select_mode: false,
@@ -96,7 +121,8 @@ impl Mbc1 {
             }
             0xa000..=0xbfff => {
                 if self.ram_enable {
-                    self.ram[self.ram_bank_number as usize][(addr - 0xa000) as usize]
+                    let bank_id = self.ram_bank_number as usize;
+                    self.ram[bank_id * Self::RAM_SIZE + (addr - 0xa000) as usize]
                 } else {
                     0xff
                 }
@@ -124,7 +150,8 @@ impl Mbc1 {
             0x6000..=0x7FFF => self.ram_select_mode = value & 1 == 1,
             0xa000..=0xbfff => {
                 if self.ram_enable {
-                    self.ram[self.ram_bank_number as usize][(addr - 0xa000) as usize] = value
+                    let bank_id = self.ram_bank_number as usize;
+                    self.ram[bank_id * Self::RAM_SIZE + (addr - 0xa000) as usize] = value;
                 }
             }
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
@@ -193,7 +220,7 @@ impl Mbc2 {
 
 pub struct Mbc3 {
     rom: Vec<u8>,
-    ram: [[u8; 0x2000]; 4],
+    ram: [u8; 4 * 0x2000],
     rtc: [u8; 5],
     rom_bank_number: u8,
     ram_bank_number: u8,
@@ -204,10 +231,13 @@ pub struct Mbc3 {
 }
 
 impl Mbc3 {
+
+    const RAM_SIZE: usize = 0x2000;
+    
     pub fn new(mem: Vec<u8>) -> Self {
         Mbc3 {
             rom: mem,
-            ram: [[0; 0x2000]; 4],
+            ram: [0; 4 * 0x2000],
             rtc: [0; 5],
             rom_bank_number: 0,
             ram_bank_number: 0,
@@ -232,7 +262,8 @@ impl Mbc3 {
                 if self.ram_enable {
                     match self.ram_bank_number {
                         0x00..=0x07 => {
-                            self.ram[self.ram_bank_number as usize][(addr - 0xa000) as usize]
+                            let bank_id = self.ram_bank_number as usize;
+                            self.ram[bank_id * Self::RAM_SIZE + (addr - 0xa000) as usize]
                         }
                         0x08..=0x0c => self.rtc[self.ram_bank_number as usize - 0x08],
                         _ => panic!("unknow ram bank number {}", self.ram_bank_number),
@@ -270,8 +301,8 @@ impl Mbc3 {
                 if self.ram_enable {
                     match self.ram_bank_number {
                         0x00..=0x07 => {
-                            self.ram[self.ram_bank_number as usize][(addr - 0xa000) as usize] =
-                                value
+                            let bank_id = self.ram_bank_number as usize;
+                            self.ram[bank_id * Self::RAM_SIZE + (addr - 0xa000) as usize] = value;
                         }
                         0x08..=0x0c => {
                             self.counter_to_rtc();

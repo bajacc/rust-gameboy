@@ -2,7 +2,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::gb::GameBoy;
-use crate::joypad;
+use crate::hardware::Hardware;
+use crate::{joypad, hardware};
 use crate::speaker::Speaker;
 
 use crate::renderer::Renderer;
@@ -25,7 +26,8 @@ const RENDER_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 20);
 
 const CYCLE_BETWEEN_RENDER: u128 = RENDER_DURATION.as_nanos() / CYCLE_DURATION.as_nanos();
 
-pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
+pub fn run(gb: &mut GameBoy, speed: f64, background: bool, hardware: &Hardware) {
+    gb.mmu.mbc.load_save(&hardware);
     let mut renderer = Renderer::new(background, background);
     let mut speaker = Speaker::new(48000);
 
@@ -67,4 +69,5 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
             thread::sleep(RENDER_DURATION - elapsed);
         }
     }
+    gb.mmu.mbc.save(&hardware);
 }
