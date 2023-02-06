@@ -16,10 +16,8 @@ mod renderer;
 mod timer;
 mod sound;
 mod speaker;
-use rodio::buffer::SamplesBuffer;
 
 use debugger::Debugger;
-use speaker::Speaker;
 use std::path::PathBuf;
 
 use gb::GameBoy;
@@ -27,10 +25,6 @@ use gb::GameBoy;
 use crate::lcd::Lcd;
 
 use clap::Parser;
-
-use std::time::Duration;
-use rodio::{Decoder, OutputStream, Sink, source};
-use rodio::source::{SineWave, Source};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -50,7 +44,6 @@ struct Cli {
     background: bool,
 }
 
-// todo: use clap to give more option at launch
 fn main() {
     let cli = Cli::parse();
 

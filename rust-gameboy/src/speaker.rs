@@ -1,9 +1,9 @@
 
-use std::sync::{Arc, atomic::Ordering};
+use std::sync::{Arc, atomic::Ordering, mpsc::SyncSender};
 use atomic_float::AtomicF32;
 
 use rodio::{OutputStream, Sink, Source, OutputStreamHandle};
-use std::sync::mpsc::{Sender, Receiver, channel};
+use std::sync::mpsc::{Receiver, sync_channel};
 
 use crate::gb::GameBoy;
 
@@ -40,32 +40,35 @@ impl Source for SoundSource {
 }
 
 const CYCLE_PER_SECOND: u32 = 1 << 20;
+const CHANNEL_SIZE: usize = 1 << 12;
 
 pub struct Speaker {
     stream: OutputStream,
     stream_handle: OutputStreamHandle,
     cycle_per_sample: u32,
     counter: u32,
-    sender: Sender<f32>
+    sender: SyncSender<f32>
 }
 
 
 impl Speaker {
-    pub fn new(cycle_per_sample: u32) -> Self {
+    pub fn new(sample_rate: u32) -> Self {
         let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-        let (sender, recv) = channel();
+        let (sender, recv) = sync_channel(CHANNEL_SIZE);
+
+        //send to channel to avoid blocking the main thread (why?)
         for _ in 0..4 {
             sender.send(0.0).unwrap();
         }
         let sound_source = SoundSource { 
-            sample_rate: CYCLE_PER_SECOND / cycle_per_sample,
+            sample_rate: sample_rate,
             receiver: recv 
         };
         stream_handle.play_raw(sound_source).unwrap();
         Speaker {
             stream: _stream,
             stream_handle: stream_handle,
-            cycle_per_sample: cycle_per_sample,
+            cycle_per_sample: CYCLE_PER_SECOND / sample_rate,
             sender: sender,
             counter: 0
         }

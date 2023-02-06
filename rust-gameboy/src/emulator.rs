@@ -6,7 +6,7 @@ use crate::speaker::Speaker;
 use crate::{joypad, speaker};
 
 use crate::renderer::Renderer;
-use minifb::Key;
+use minifb::{Key, KeyRepeat};
 
 const KEY_MAP: [(Key, joypad::Key); 8] = [
     (Key::Z, joypad::Key::A),
@@ -28,9 +28,10 @@ const CYCLE_BETWEEN_RENDER: u128 = RENDER_DURATION.as_nanos() / CYCLE_DURATION.a
 pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
 
     let mut renderer = Renderer::new(background, background);
-    let mut speaker = Speaker::new(16);
+    let mut speaker = Speaker::new(48000);
 
-    let cycle_between_render = (CYCLE_BETWEEN_RENDER as f64 * speed) as u128;
+    let mut cycle_between_render = CYCLE_BETWEEN_RENDER;
+    let cycle_between_render_speed = (CYCLE_BETWEEN_RENDER as f64 * speed) as u128;
 
     while renderer.lcd_window.is_open() && !renderer.lcd_window.is_key_down(Key::Escape) {
         let last_render = Instant::now();
@@ -42,10 +43,19 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
             }
         }
 
+        let speedup = renderer.lcd_window.is_key_down(Key::S);
+        if speedup {
+            cycle_between_render = cycle_between_render_speed;
+        } else {
+            cycle_between_render = CYCLE_BETWEEN_RENDER;
+        }
+
         let mut rendered = false;
         for _ in 0..cycle_between_render {
             gb.cycle();
-            speaker.cycle(gb);
+            if !speedup {
+                speaker.cycle(gb);
+            }
             // only render full window
             if !rendered && gb.mmu.lcd.get_mode() == 1 {
                 renderer.render(&gb);
@@ -56,8 +66,6 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
         let elapsed = last_render.elapsed();
         if elapsed < RENDER_DURATION {
             thread::sleep(RENDER_DURATION - elapsed);
-        } else {
-            println!("no sleep loop {} {}", RENDER_DURATION.as_secs_f64(), elapsed.as_secs_f64());
-        }
+        } 
     }
 }
