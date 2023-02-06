@@ -90,7 +90,7 @@ impl Envelope {
         match self.increment {
             false if self.volume > 0 => self.volume -= 1,
             true if self.volume < 0xf => self.volume += 1,
-            _ => ()
+            _ => (),
         }
     }
 
@@ -138,15 +138,15 @@ impl Sweep {
             self.freq = new_freq as u16;
             self.compute_next_freq();
         }
-        
     }
 
     fn compute_next_freq(&mut self) -> i16 {
         let shifted = (self.freq >> self.shift) as i16;
-        let new_freq = self.freq as i16 + match self.increment {
-            false => -shifted,
-            true => shifted,
-        };
+        let new_freq = self.freq as i16
+            + match self.increment {
+                false => -shifted,
+                true => shifted,
+            };
         if new_freq >= 2048 {
             self.enable = false;
         }
@@ -193,10 +193,9 @@ impl Wave {
     const VOLUME_SHIFT: [u8; 4] = [4, 0, 1, 2];
 
     pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
-
         if !self.enable {
             return;
-        }        
+        }
 
         if self.counter != 0 {
             self.counter -= 1;
@@ -274,7 +273,6 @@ impl Wave {
     }
 }
 
-
 #[derive(Default)]
 struct Square {
     envelope: Envelope,
@@ -298,7 +296,6 @@ pub const WAVEFORM: [[u8; 8]; 4] = [
 ];
 
 impl Square {
-
     pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
         self.envelope.cycle(frame_sequencer);
         if let Some(sweep) = self.sweep.as_mut() {
@@ -368,7 +365,7 @@ impl Square {
         match addr {
             0 => match self.sweep.as_ref() {
                 Some(sweep) => sweep.nr10,
-                _ => mmu::NO_DATA
+                _ => mmu::NO_DATA,
             },
             1 => self.nr21,
             2 => self.envelope.nrx2,
@@ -380,8 +377,10 @@ impl Square {
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
-            0 => if let Some(sweep) = self.sweep.as_mut() {
-                sweep.set_nr10(value);
+            0 => {
+                if let Some(sweep) = self.sweep.as_mut() {
+                    sweep.set_nr10(value);
+                }
             }
             1 => self.nr21 = value,
             2 => {
@@ -389,7 +388,7 @@ impl Square {
                 if value & 0xf8 == 0 {
                     self.enable = false;
                 }
-            },
+            }
             3 => self.nr23 = value,
             4 => {
                 self.nr24 = value;
@@ -415,7 +414,6 @@ struct Noise {
 }
 
 impl Noise {
-
     pub fn cycle(&mut self, frame_sequencer: &FrameSequencer) {
         self.envelope.cycle(frame_sequencer);
 
@@ -499,7 +497,7 @@ impl Noise {
                 if value & 0xf8 == 0 {
                     self.enable = false;
                 }
-            },
+            }
             3 => self.nr43 = value,
             4 => {
                 self.nr44 = value;
@@ -549,7 +547,7 @@ impl Sound {
         self.wave.cycle(&self.frame_sequencer);
         self.square1.cycle(&self.frame_sequencer);
         self.square2.cycle(&self.frame_sequencer);
-        self.noise.cycle(&self.frame_sequencer);        
+        self.noise.cycle(&self.frame_sequencer);
     }
 
     pub fn get_sample(&self) -> (f32, f32) {
@@ -601,11 +599,11 @@ impl Sound {
     }
 
     fn get_nr52(&self) -> u8 {
-        return (self.enable as u8) << 7 
-        | (self.wave.enable as u8) << 3 
-        | (self.wave.enable as u8) << 2 
-        | (self.square2.enable as u8) << 1 
-        | (self.square1.enable as u8);
+        return (self.enable as u8) << 7
+            | (self.wave.enable as u8) << 3
+            | (self.wave.enable as u8) << 2
+            | (self.square2.enable as u8) << 1
+            | (self.square1.enable as u8);
     }
 
     pub fn read(&self, addr: u16) -> u8 {

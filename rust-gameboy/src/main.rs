@@ -13,9 +13,9 @@ mod mmu;
 mod opcodes;
 mod opcodes_const;
 mod renderer;
-mod timer;
 mod sound;
 mod speaker;
+mod timer;
 
 use debugger::Debugger;
 use std::path::PathBuf;

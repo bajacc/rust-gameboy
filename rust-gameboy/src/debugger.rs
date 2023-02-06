@@ -1,7 +1,6 @@
 use crate::gb::GameBoy;
 use clap::{Parser, Subcommand};
 
-
 pub struct Debugger {
     gb: GameBoy,
 }

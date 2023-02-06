@@ -2,11 +2,11 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::gb::GameBoy;
+use crate::joypad;
 use crate::speaker::Speaker;
-use crate::{joypad};
 
 use crate::renderer::Renderer;
-use minifb::{Key};
+use minifb::Key;
 
 const KEY_MAP: [(Key, joypad::Key); 8] = [
     (Key::Z, joypad::Key::A),
@@ -26,7 +26,6 @@ const RENDER_DURATION: Duration = Duration::from_nanos(10u64.pow(9) / 20);
 const CYCLE_BETWEEN_RENDER: u128 = RENDER_DURATION.as_nanos() / CYCLE_DURATION.as_nanos();
 
 pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
-
     let mut renderer = Renderer::new(background, background);
     let mut speaker = Speaker::new(48000);
 
@@ -66,6 +65,6 @@ pub fn run(gb: &mut GameBoy, speed: f64, background: bool) {
         let elapsed = last_render.elapsed();
         if elapsed < RENDER_DURATION {
             thread::sleep(RENDER_DURATION - elapsed);
-        } 
+        }
     }
 }

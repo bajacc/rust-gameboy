@@ -1,14 +1,13 @@
+use std::sync::mpsc::SyncSender;
 
-use std::sync::{mpsc::SyncSender};
-
-use rodio::{OutputStream, Source, OutputStreamHandle};
-use std::sync::mpsc::{Receiver, sync_channel};
+use rodio::{OutputStream, OutputStreamHandle, Source};
+use std::sync::mpsc::{sync_channel, Receiver};
 
 use crate::gb::GameBoy;
 
 pub struct SoundSource {
     pub sample_rate: u32,
-    receiver: Receiver<f32>
+    receiver: Receiver<f32>,
 }
 
 impl Iterator for SoundSource {
@@ -18,7 +17,6 @@ impl Iterator for SoundSource {
         Some(self.receiver.recv().unwrap())
     }
 }
-
 
 impl Source for SoundSource {
     fn current_frame_len(&self) -> Option<usize> {
@@ -46,9 +44,8 @@ pub struct Speaker {
     stream_handle: OutputStreamHandle,
     cycle_per_sample: u32,
     counter: u32,
-    sender: SyncSender<f32>
+    sender: SyncSender<f32>,
 }
-
 
 impl Speaker {
     pub fn new(sample_rate: u32) -> Self {
@@ -59,9 +56,9 @@ impl Speaker {
         for _ in 0..4 {
             sender.send(0.0).unwrap();
         }
-        let sound_source = SoundSource { 
+        let sound_source = SoundSource {
             sample_rate: sample_rate,
-            receiver: recv 
+            receiver: recv,
         };
         stream_handle.play_raw(sound_source).unwrap();
         Speaker {
@@ -69,7 +66,7 @@ impl Speaker {
             stream_handle: stream_handle,
             cycle_per_sample: CYCLE_PER_SECOND / sample_rate,
             sender: sender,
-            counter: 0
+            counter: 0,
         }
     }
 
