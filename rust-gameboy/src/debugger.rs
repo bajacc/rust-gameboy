@@ -1,6 +1,6 @@
 use crate::gb::GameBoy;
-use clap::{Args, Parser, Subcommand};
-use rustyline::Editor;
+use clap::{Parser, Subcommand};
+
 
 pub struct Debugger {
     gb: GameBoy,

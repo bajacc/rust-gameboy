@@ -72,7 +72,7 @@ macro_rules! bit {
 
 const TRANSPARENT: u8 = 0xff;
 
-fn apply_palette(palette: u8, mut color: u8) -> u8 {
+fn apply_palette(palette: u8, color: u8) -> u8 {
     return (palette >> (color * 2)) & 0x3;
 }
 

@@ -1,7 +1,7 @@
 
-use std::sync::{Arc, atomic::Ordering, mpsc::SyncSender};
+use std::sync::{mpsc::SyncSender};
 
-use rodio::{OutputStream, Sink, Source, OutputStreamHandle};
+use rodio::{OutputStream, Source, OutputStreamHandle};
 use std::sync::mpsc::{Receiver, sync_channel};
 
 use crate::gb::GameBoy;

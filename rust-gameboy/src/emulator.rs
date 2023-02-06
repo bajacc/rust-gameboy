@@ -3,10 +3,10 @@ use std::time::{Duration, Instant};
 
 use crate::gb::GameBoy;
 use crate::speaker::Speaker;
-use crate::{joypad, speaker};
+use crate::{joypad};
 
 use crate::renderer::Renderer;
-use minifb::{Key, KeyRepeat};
+use minifb::{Key};
 
 const KEY_MAP: [(Key, joypad::Key); 8] = [
     (Key::Z, joypad::Key::A),
