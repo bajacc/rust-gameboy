@@ -1,6 +1,5 @@
 
 use std::sync::{Arc, atomic::Ordering, mpsc::SyncSender};
-use atomic_float::AtomicF32;
 
 use rodio::{OutputStream, Sink, Source, OutputStreamHandle};
 use std::sync::mpsc::{Receiver, sync_channel};
