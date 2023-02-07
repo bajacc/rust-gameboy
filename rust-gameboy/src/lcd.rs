@@ -1,8 +1,10 @@
 use crate::cpu::Interupt;
 use crate::mmu;
 
+const VRAM_SIZE: usize = 2 * 0x2000;
+
 pub struct Lcd {
-    pub video_ram: [u8; 0x2000],
+    vram: [u8; VRAM_SIZE],
     pub oam_ram: [u8; 0xa0],
     pub lcdc: u8,
     pub stat: u8,
@@ -19,6 +21,7 @@ pub struct Lcd {
     num_idle_cycle: usize,
     interupt: u8,
     window_line: u8,
+    vram_bank: bool,
 
     pub display: [u8; Lcd::NUM_PIXELS],
     pub dma_addr: Option<u8>,
@@ -88,7 +91,7 @@ impl Lcd {
 
     pub fn new() -> Self {
         Lcd {
-            video_ram: [0; 0x2000],
+            vram: [0; VRAM_SIZE],
             oam_ram: [0; 0xa0],
             lcdc: 0,
             stat: 0,
@@ -104,6 +107,7 @@ impl Lcd {
             num_idle_cycle: 0,
             interupt: 0,
             window_line: 0,
+            vram_bank: false,
             display: [0; Lcd::NUM_PIXELS],
             dma_addr: None,
         }
@@ -111,7 +115,7 @@ impl Lcd {
 
     pub fn read(&self, addr: u16) -> u8 {
         match addr {
-            0x8000..=0x9fff => self.video_ram[addr as usize - 0x8000],
+            0x8000..=0x9fff => self.vram[self.vram_bank as usize * 0x2000 + addr as usize - 0x8000],
             0xfe00..=0xfe9f => self.oam_ram[addr as usize - 0xfe00],
             0xff40 => self.lcdc,
             0xff41 => self.stat,
@@ -125,13 +129,15 @@ impl Lcd {
             0xff49 => self.obp1,
             0xff4a => self.wy,
             0xff4b => self.wx,
+            // cgb
+            0xff4f => self.vram_bank as u8,
             _ => panic!("0x{:04x}", addr),
         }
     }
 
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
-            0x8000..=0x9fff => self.video_ram[addr as usize - 0x8000] = value,
+            0x8000..=0x9fff => self.vram[self.vram_bank as usize * 0x2000 + addr as usize - 0x8000] = value,
             0xfe00..=0xfe9f => self.oam_ram[addr as usize - 0xfe00] = value,
             0xff40 => {
                 self.lcdc = value;
@@ -157,18 +163,20 @@ impl Lcd {
             0xff49 => self.obp1 = value,
             0xff4a => self.wy = value,
             0xff4b => self.wx = value,
+            // cgb
+            0xff4f => self.vram_bank =  value & 1 != 0,
             _ => panic!("0x{:04x}, 0x{:02x}", addr, value),
         }
     }
 
     fn get_pixel_bg(&self, y: usize, x: usize, tile_index_addr: usize) -> u8 {
         let tile_num = (y / 8) * 32 + (x / 8);
-        let mut tile_addr = self.video_ram[tile_index_addr + tile_num] as usize;
+        let mut tile_addr = self.vram[self.vram_bank as usize * 0x2000 + tile_index_addr + tile_num] as usize;
         if !bit!(self.lcdc, LcdcBit::TileSource) && tile_addr < 0x80 {
             tile_addr += 256;
         }
-        let lsb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2];
-        let msb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2 + 1];
+        let lsb_byte = self.vram[self.vram_bank as usize * 0x2000 + Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2];
+        let msb_byte = self.vram[self.vram_bank as usize * 0x2000 + Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2 + 1];
         let bit_pos = 7 - (x % 8);
         let lsb = (lsb_byte >> bit_pos) & 1;
         let msb = (msb_byte >> bit_pos) & 1;
@@ -226,8 +234,8 @@ impl Lcd {
                 y_on_tile = 7 - y_on_tile;
             }
 
-            let lsb_byte = self.video_ram[Lcd::TILE_ADDR + idx_tile * 16 + y_on_tile * 2];
-            let msb_byte = self.video_ram[Lcd::TILE_ADDR + idx_tile * 16 + y_on_tile * 2 + 1];
+            let lsb_byte = self.vram[self.vram_bank as usize * 0x2000 + Lcd::TILE_ADDR + idx_tile * 16 + y_on_tile * 2];
+            let msb_byte = self.vram[self.vram_bank as usize * 0x2000 + Lcd::TILE_ADDR + idx_tile * 16 + y_on_tile * 2 + 1];
 
             let arr = if sprite.behind_bg { &mut *bg } else { &mut *fg };
             let palette = if sprite.palette { self.obp1 } else { self.obp0 };
@@ -408,8 +416,8 @@ impl Lcd {
         for y in 0..24 * 8 {
             for x in 0..16 * 8 {
                 let tile_addr = (y / 8) * 16 + (x / 8);
-                let lsb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2];
-                let msb_byte = self.video_ram[Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2 + 1];
+                let lsb_byte = self.vram[self.vram_bank as usize * 0x2000 + Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2];
+                let msb_byte = self.vram[self.vram_bank as usize * 0x2000 + Lcd::TILE_ADDR + tile_addr * 16 + (y % 8) * 2 + 1];
                 let bit_pos = 7 - (x % 8);
                 let lsb = (lsb_byte >> bit_pos) & 1;
                 let msb = (msb_byte >> bit_pos) & 1;
